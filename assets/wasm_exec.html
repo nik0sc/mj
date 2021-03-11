@@ -1,0 +1,78 @@
+<!doctype html>
+<!--
+Copyright 2018 The Go Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+-->
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Go wasm</title>
+</head>
+
+<body>
+<!--
+Add the following polyfill for Microsoft Edge 17/18 support:
+<script src="https://cdn.jsdelivr.net/npm/text-encoding@0.7.0/lib/encoding.min.js"></script>
+(see https://caniuse.com/#feat=textencoder)
+-->
+<script src="wasm_exec.js"></script>
+<script>
+    if (!WebAssembly.instantiateStreaming) { // polyfill
+        WebAssembly.instantiateStreaming = async (resp, importObject) => {
+            const source = await (await resp).arrayBuffer();
+            return await WebAssembly.instantiate(source, importObject);
+        };
+    }
+
+    const go = new Go();
+    let mod, inst;
+    WebAssembly.instantiateStreaming(fetch("handcheck.wasm"), go.importObject).then((result) => {
+        mod = result.module;
+        inst = result.instance;
+        go.run(result.instance);
+    }).catch((err) => {
+        console.error(err);
+    });
+    window.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("btnCheck").disabled = false;
+        document.getElementById("btnCheck").onclick = () => {
+            const h = document.getElementById("inpHand").value;
+            const split = document.getElementById("chkSplit").checked;
+            const memo = document.getElementById("chkMemo").checked;
+
+            optCheck(h, (result, error) => {
+                if (error != null) {
+                    console.error(error);
+                } else {
+                    document.getElementById("result").textContent = result;
+                }
+            }, split, memo);
+        };
+        document.getElementById("result").textContent = "Ready";
+    });
+</script>
+
+<p>
+    <label for="inpHand">Hand: </label>
+    <input type="text" id="inpHand"/>
+    <button id="btnCheck" disabled>Check</button>
+    <label for="chkSplit">Split</label>
+    <input type="checkbox" id="chkSplit"/>
+    <label for="chkMemo">Memo</label>
+    <input type="checkbox" id="chkMemo" checked/>
+</p>
+
+<p id="result">Loading... checker is 2MB+, please be patient (try tinygo wasm?)</p>
+<p id="error" style="color: orangered"></p>
+
+<p>Notes:</p>
+<ul>
+    <li>Split splits your hand into sub-hands of the same suit before solving</li>
+    <li>Memo controls memoization, leave this on unless you know what you're doing</li>
+</ul>
+<p><em>More wasm shenanigans in progress...</em></p>
+</body>
+
+</html>

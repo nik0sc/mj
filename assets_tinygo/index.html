@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Handcheck (tinygo)</title>
+    <script src="wasm_exec.js"></script>
+    <script src="handcheck.js" async></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 10pt 10pt;
+        }
+        p, li {
+            line-height: 140%;
+        }
+        .und {
+            text-decoration: underline;
+        }
+        .nerds {
+            font-style: italic;
+        }
+        #inpHand {
+            width: 200pt;
+        }
+        #result {
+            font-size: 24pt;
+        }
+        #error {
+            font-family: monospace;
+            color: orangered;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Mahjong hand solver</h1>
+<p>This algorithm finds the optimal grouping for a mahjong hand. An optimal grouping minimises ungrouped tiles, then
+    minimises the number of pairs. The optimal grouping for a hand is not necessarily a winning one.</p>
+
+<p>
+    <label for="inpHand">Hand: </label>
+    <input type="text" id="inpHand"/>
+    <button id="btnCheck" disabled>Check</button>
+    <label for="selStrategy">Strategy:
+        <select id="selStrategy">
+            <option value="opt" selected>Optimal</option>
+            <option value="optcnt" disabled>Optimal Counter</option>
+            <option value="greedy">Greedy (buggy)</option>
+        </select>
+    </label>
+    <label for="chkSplit">Split<input type="checkbox" id="chkSplit"/></label>
+    <label for="chkMemo">Memo<input type="checkbox" id="chkMemo" checked/></label>
+</p>
+
+<p id="result"></p>
+<p id="error">Loading... checker is 145KB, please be patient (if there is no change, try refreshing the page)</p>
+
+<p>Notes:</p>
+<ul>
+    <li>Enter hands as two-character suit-value pairs separated by spaces.
+    <li>Suits are <span class="und">b</span>amboo,
+        <span class="und">c</span>oins,
+        <span class="und">w</span>anzi,
+        <span class="und">h</span>onours and
+        <span class="und">f</span>lowers.
+    </li>
+    <li>Values are the digits 1-9, <span class="und">e</span>ast,
+        <span class="und">s</span>outh,
+        <span class="und">w</span>est,
+        <span class="und">n</span>orth,
+        <span class="und">z</span>hong,
+        <span class="und">f</span>a and
+        <span class="und">b</span>an.
+    </li>
+    <li>Solved hands are shown in the order of pengs/pongs, chis/chows and pairs.</li>
+    <li>Interesting hands like 13 orphans or gang/kong are not implemented.</li>
+</ul>
+<p class="nerds">Notes for nerds:</p>
+<ul class="nerds">
+    <li>Split splits your hand into sub-hands of the same suit before solving.</li>
+    <li>Memo controls memoization, turning it off will cause freezing on certain hands. Try it with 14 of the same tile. I
+        think all goroutines run on the main thread in js/wasm.</li>
+    <li>Check the console for call stats.</li>
+    <li>The wasm is compiled with tinygo, it maaaay be "wrong" compared to gc.</li>
+</ul>
+</body>
+
+</html>
