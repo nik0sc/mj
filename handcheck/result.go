@@ -2,6 +2,7 @@ package handcheck
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 
 	"mj"
@@ -63,31 +64,57 @@ func (r Result) String() string {
 	return strings.Join(ss, " ")
 }
 
-// Repr returns a space-efficient encoding of this result, suitable for comparison
+// Marshal returns a space-efficient encoding of this result, suitable for comparison
 // and map keys. For a stable representation, sort each result field first.
-func (r Result) Repr() string {
+func (r Result) Marshal() string {
 	var b bytes.Buffer
 
 	for _, t := range r.Pengs {
-		b.WriteByte(t.Repr())
+		b.WriteByte(t.Marshal())
 	}
 	b.WriteByte(',')
 
 	for _, t := range r.Chis {
-		b.WriteByte(t.Repr())
+		b.WriteByte(t.Marshal())
 	}
 	b.WriteByte(',')
 
 	for _, t := range r.Pairs {
-		b.WriteByte(t.Repr())
+		b.WriteByte(t.Marshal())
 	}
 	b.WriteByte(',')
 
 	for _, t := range r.Free {
-		b.WriteByte(t.Repr())
+		b.WriteByte(t.Marshal())
 	}
 
 	return b.String()
+}
+
+func (r Result) Copy() Result {
+	var rNew Result
+
+	if r.Pengs != nil {
+		rNew.Pengs = make([]mj.Tile, len(r.Pengs))
+		copy(rNew.Pengs, r.Pengs)
+	}
+
+	if r.Chis != nil {
+		rNew.Chis = make([]mj.Tile, len(r.Chis))
+		copy(rNew.Chis, r.Chis)
+	}
+
+	if r.Pairs != nil {
+		rNew.Pairs = make([]mj.Tile, len(r.Pairs))
+		copy(rNew.Pairs, r.Pairs)
+	}
+
+	if r.Free != nil {
+		rNew.Free = make(mj.Hand, len(r.Free))
+		copy(rNew.Free, r.Free)
+	}
+
+	return rNew
 }
 
 // score is used to determine the optimality of solutions. It is an
@@ -100,6 +127,22 @@ func (r Result) score() int {
 	// Effectively, a free tile is worth nothing,
 	// a tile in a pair is worth 1,
 	// and a tile in a peng/chi is worth 1.333...
-	return 4*len(r.Pengs)+4*len(r.Chis)+2*len(r.Pairs)
+	return 4*len(r.Pengs) + 4*len(r.Chis) + 2*len(r.Pairs)
 	// a good compiler would turn that into left shifts and adds
+}
+
+func UnmarshalResult(repr string) Result {
+	var r Result
+
+	reprs := strings.Split(repr, ",")
+	if len(reprs) != 4 {
+		panic(fmt.Sprintf("wrong number of fields: %d", len(reprs)))
+	}
+
+	r.Pengs = mj.UnmarshalHand(reprs[0])
+	r.Chis = mj.UnmarshalHand(reprs[1])
+	r.Pairs = mj.UnmarshalHand(reprs[2])
+	r.Free = mj.UnmarshalHand(reprs[3])
+
+	return r
 }

@@ -33,7 +33,7 @@ func Test_optChecker_Check(t *testing.T) {
 			"b1 b2 b3 b3 b4 b5 b5 b6 b7 b7 b8 b9 b9 b9",
 			Result{
 				Pengs: nil,
-				Chis:  []mj.Tile{
+				Chis: []mj.Tile{
 					{Suit: mj.Bamboo, Value: 1},
 					{Suit: mj.Bamboo, Value: 3},
 					{Suit: mj.Bamboo, Value: 5},
@@ -50,7 +50,7 @@ func Test_optChecker_Check(t *testing.T) {
 				Pengs: []mj.Tile{{Suit: mj.Honour, Value: mj.Fa}},
 				Chis:  []mj.Tile{{Suit: mj.Bamboo, Value: 7}},
 				Pairs: []mj.Tile{{Suit: mj.Wan, Value: 5}},
-				Free:  mj.Hand{
+				Free: mj.Hand{
 					{Suit: mj.Coin, Value: 3},
 					{Suit: mj.Coin, Value: 5},
 					{Suit: mj.Wan, Value: 1},
@@ -65,7 +65,7 @@ func Test_optChecker_Check(t *testing.T) {
 			"c1 c2 c3 c3 c3 c4 c5 c6",
 			Result{
 				Pengs: nil,
-				Chis:  []mj.Tile{
+				Chis: []mj.Tile{
 					{Suit: mj.Coin, Value: 1},
 					{Suit: mj.Coin, Value: 4},
 				},
@@ -78,7 +78,7 @@ func Test_optChecker_Check(t *testing.T) {
 			"c1 c1 c1 c2 c3 c4 c5 c6",
 			Result{
 				Pengs: nil,
-				Chis:  []mj.Tile{
+				Chis: []mj.Tile{
 					{Suit: mj.Coin, Value: 1},
 					{Suit: mj.Coin, Value: 4},
 				},
@@ -93,7 +93,7 @@ func Test_optChecker_Check(t *testing.T) {
 				Pengs: nil,
 				Chis:  nil,
 				Pairs: nil,
-				Free:  mj.Hand{
+				Free: mj.Hand{
 					{Suit: mj.Bamboo, Value: 1},
 					{Suit: mj.Bamboo, Value: 3},
 					{Suit: mj.Bamboo, Value: 5},
@@ -116,7 +116,7 @@ func Test_optChecker_Check(t *testing.T) {
 			"b1 b2 b3 b1 b2 b3",
 			Result{
 				Pengs: nil,
-				Chis:  []mj.Tile{
+				Chis: []mj.Tile{
 					{Suit: mj.Bamboo, Value: 1},
 					{Suit: mj.Bamboo, Value: 1},
 				},
@@ -131,20 +131,20 @@ func Test_optChecker_Check(t *testing.T) {
 			if err != nil {
 				t.Fatalf("invalid hand: " + err.Error())
 			}
-			t.Logf("%s repr: %x", h.String(), h.Repr())
+			t.Logf("%s repr: %x", h.String(), h.Marshal())
 
-			rFast := OptChecker{nil, true, true}.Check(h)
+			rFast := OptChecker{Split: true, UseMemo: true}.Check(h)
 			// order may be wrong
 			sort.Sort(rFast.Free)
 
-			if tt.want.Repr() != rFast.Repr() {
+			if tt.want.Marshal() != rFast.Marshal() {
 				t.Errorf("fast: want %v, got %v", tt.want, rFast)
 			}
 
-			rSlow := OptChecker{nil, false, false}.Check(h)
+			rSlow := OptChecker{}.Check(h)
 			sort.Sort(rSlow.Free)
 
-			if tt.want.Repr() != rSlow.Repr() {
+			if tt.want.Marshal() != rSlow.Marshal() {
 				t.Errorf("slow: want %v, got %v", tt.want, rSlow)
 			}
 		})

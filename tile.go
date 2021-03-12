@@ -46,10 +46,10 @@ const (
 	uniTileCoin1   = '🀙'
 	uniTileFlower1 = '🀢'
 	// used to force emoji style representation
-	uniVS16 rune   = 0xfe0f
+	uniVS16 rune = 0xfe0f
 	// enable/disable emoji style for all tiles
 	// (this seems to work on Windows renderers and nowhere else)
-	uniUseVS16     = true
+	uniUseVS16 = true
 )
 
 // Valid returns true if the Tile data is valid and may be used in the algorithms.
@@ -72,7 +72,7 @@ func (t Tile) Valid() bool {
 
 // String returns a Unicode human-readable representation of the Tile.
 // These strings require up to 7 bytes to encode in utf-8.
-// For a space efficient encoding check out Repr().
+// For a space efficient encoding check out Marshal().
 func (t Tile) String() string {
 	// base mahjong tile requires 4 bytes in utf-8
 	// vs16 requires another 3 bytes
@@ -114,8 +114,8 @@ func (t Tile) String() string {
 	}
 }
 
-// Repr returns an unambiguous encoding for a Tile packed into a byte.
-func (t Tile) Repr() byte {
+// Marshal returns an unambiguous encoding for a Tile packed into a byte.
+func (t Tile) Marshal() byte {
 	// The encoding:
 	// 0bxxxyyyyy
 	// x: The suit, unchanged
@@ -139,7 +139,7 @@ func (t Tile) IsBasic() bool {
 	return t.Valid() && t.Suit != Flower && t.Suit != Honour
 }
 
-func tileFromRepr(b byte) Tile {
+func UnmarshalTile(b byte) Tile {
 	t := Tile{
 		Suit:  Suit(b >> 5),
 		Value: Value(b & 31),

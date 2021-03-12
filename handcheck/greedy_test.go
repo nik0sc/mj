@@ -69,7 +69,7 @@ func Test_handChecker_Check(t *testing.T) {
 			if err != nil {
 				t.Fatalf("invalid hand: " + err.Error())
 			}
-			t.Logf("%s repr: %x", h.String(), h.Repr())
+			t.Logf("%s repr: %x", h.String(), h.Marshal())
 
 			if got := c.Check(h); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Check() = %v, want %v", got, tt.want)

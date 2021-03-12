@@ -13,7 +13,7 @@ import (
 func main() {
 	in, err := bufio.NewReader(os.Stdin).ReadString('\n')
 	if err != nil {
-	    fmt.Printf("scan: %s\n", err.Error())
+		fmt.Printf("scan: %s\n", err.Error())
 		return
 	}
 
@@ -26,7 +26,7 @@ func main() {
 	}
 
 	sort.Sort(h)
-	fmt.Printf("repr: %x\n", h.Repr())
+	fmt.Printf("marshal: %x\n", h.Marshal())
 
 	r := handcheck.OptChecker{Split: false, UseMemo: true}.Check(h)
 	fmt.Printf("solution: %s\n", r.String())

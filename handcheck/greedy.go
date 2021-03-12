@@ -98,7 +98,7 @@ func (s gstate) step() GreedyResult {
 
 	for i, t := range s.h {
 		hNew := s.h.Remove(i)
-		hNewRepr := hNew.Repr()
+		hNewRepr := hNew.Marshal()
 		if r, ok := s.shared.memo[hNewRepr]; ok {
 			if writeMetrics {
 				s.shared.memohit++

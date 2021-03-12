@@ -28,6 +28,8 @@ type OptChecker struct {
 	// UseMemo enables memoisation of repeated subproblems when solving a hand.
 	// This should really always be on.
 	UseMemo bool
+	// UseUnsafeMemo...
+	UseUnsafeMemo bool
 }
 
 type ostate struct {
@@ -36,7 +38,7 @@ type ostate struct {
 }
 
 type oshared struct {
-	memo      map[string]Result
+	memo      map[string]string
 	stepCount int
 	memoHits  int
 }
@@ -49,12 +51,12 @@ func (c OptChecker) Check(hand mj.Hand) Result {
 	sort.Sort(h)
 
 	// did we solve this hand before?
-	hrepr := h.Repr()
+	hrepr := h.Marshal()
 	if c.cache == nil {
 		c.cache = make(map[string]Result)
 	}
 	if r, ok := c.cache[hrepr]; ok {
-		return r
+		return r.Copy()
 	}
 
 	var r Result
@@ -84,7 +86,7 @@ func (c OptChecker) Check(hand mj.Hand) Result {
 func (c OptChecker) start(h mj.Hand) Result {
 	shared := oshared{}
 	if c.UseMemo {
-		shared.memo = make(map[string]Result)
+		shared.memo = make(map[string]string)
 	}
 	// at first, the entire hand is free
 	s := ostate{Result{Free: h}, &shared}
@@ -114,7 +116,7 @@ func (s ostate) step() Result {
 		return s.res
 	}
 
-	repr := s.res.Free.Repr()
+	repr := s.res.Free.Marshal()
 	if s.shared.memo != nil {
 		// use memoization: this problem has optimal substructure and
 		// overlapping subproblems, making it a good use for DP
@@ -122,7 +124,7 @@ func (s ostate) step() Result {
 			if writeMetrics {
 				s.shared.memoHits++
 			}
-			return r
+			return UnmarshalResult(r)
 		}
 	}
 
@@ -131,17 +133,12 @@ func (s ostate) step() Result {
 	for i, t := range s.res.Free {
 		// try and build a set with this tile
 		// the hand is always kept in sorted order, this vastly simplifies building
-		// peng is checked first, then chi, then pair, this is intentional
-		if s.res.Free.IsPengAt(i) {
+		if nextFree, ok := s.res.Free.TryPengAt(i); ok {
 			// build the state that results from building a peng with this tile
 			nextPengs := make([]mj.Tile, len(s.res.Pengs)+1)
-			nextFree := make(mj.Hand, numFree)
 
 			copy(nextPengs, s.res.Pengs)
 			nextPengs[len(nextPengs)-1] = t
-
-			copy(nextFree, s.res.Free)
-			nextFree = append(nextFree[:i], nextFree[i+3:]...)
 
 			r := ostate{Result{
 				Pengs: nextPengs,
@@ -156,41 +153,18 @@ func (s ostate) step() Result {
 			}
 		}
 
-		if s.res.Free.IsChiAt(i) {
-			nextChis := make([]mj.Tile, len(s.res.Chis)+1)
-			nextFree := make(mj.Hand, numFree-3)
+		// A possible optimisation: Try pair first, and only if it succeeds, try peng
+		// Tried it, causes test "all c" to fail on the fast but not on the slow version
+		if nextFree, ok := s.res.Free.TryPairAt(i); ok {
+			nextPairs := make([]mj.Tile, len(s.res.Pairs)+1)
 
-			copy(nextChis, s.res.Chis)
-			nextChis[len(nextChis)-1] = t
-
-			// This is a bit more complicated, since the tiles in a chi are not necessarily
-			// consecutive in the hand
-			var removed1, removed2, removed3 bool
-			nextFreeIdx := 0
-			// For faster comparison and manipulation
-			tRepr := t.Repr()
-
-			for _, tFree := range s.res.Free {
-				freeRepr := tFree.Repr()
-				if tRepr == freeRepr && !removed1 {
-					removed1 = true
-				} else if tRepr+1 == freeRepr && !removed2 {
-					// Adding to tRepr: the lowest bits of repr are the value of the tile.
-					// So we can just increment the repr to increment the value.
-					removed2 = true
-				} else if tRepr+2 == freeRepr && !removed3 {
-					removed3 = true
-				} else {
-					// only in this case, copy the tile in
-					nextFree[nextFreeIdx] = tFree
-					nextFreeIdx++
-				}
-			}
+			copy(nextPairs, s.res.Pairs)
+			nextPairs[len(nextPairs)-1] = t
 
 			r := ostate{Result{
 				Pengs: s.res.Pengs,
-				Chis:  nextChis,
-				Pairs: s.res.Pairs,
+				Chis:  s.res.Chis,
+				Pairs: nextPairs,
 				Free:  nextFree,
 			}, s.shared}.step()
 
@@ -199,20 +173,16 @@ func (s ostate) step() Result {
 			}
 		}
 
-		if s.res.Free.IsPairAt(i) {
-			nextPairs := make([]mj.Tile, len(s.res.Pairs)+1)
-			nextFree := make(mj.Hand, numFree)
+		if nextFree, ok := s.res.Free.TryChiAt(i); ok {
+			nextChis := make([]mj.Tile, len(s.res.Chis)+1)
 
-			copy(nextPairs, s.res.Pairs)
-			nextPairs[len(nextPairs)-1] = t
-
-			copy(nextFree, s.res.Free)
-			nextFree = append(nextFree[:i], nextFree[i+2:]...)
+			copy(nextChis, s.res.Chis)
+			nextChis[len(nextChis)-1] = t
 
 			r := ostate{Result{
 				Pengs: s.res.Pengs,
-				Chis:  s.res.Chis,
-				Pairs: nextPairs,
+				Chis:  nextChis,
+				Pairs: s.res.Pairs,
 				Free:  nextFree,
 			}, s.shared}.step()
 
@@ -228,7 +198,14 @@ func (s ostate) step() Result {
 			// the currently free tiles
 			fmt.Printf("updating memo? repr=%x rOld=%+v best=%+v", repr, rOld, best)
 		}
-		s.shared.memo[repr] = best
+		// sort the result first
+		result := best.Copy()
+		sort.Sort(mj.Hand(result.Pengs))
+		sort.Sort(mj.Hand(result.Chis))
+		sort.Sort(mj.Hand(result.Pairs))
+		sort.Sort(result.Free)
+
+		s.shared.memo[repr] = result.Marshal()
 	}
 
 	return best

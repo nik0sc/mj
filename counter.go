@@ -115,7 +115,9 @@ func (c Counter) Copy() Counter {
 	return Counter{m, c.n, h}
 }
 
-// TryPeng TODO
+// TryPeng attempts to form a peng with the given tile. If it succeeds, it
+// returns a new Counter with those tiles removed. Otherwise, it returns a
+// zero Counter, which can be tested with Counter.Valid().
 func (c Counter) TryPeng(t Tile) Counter {
 	if c.m[t] < 3 {
 		return Counter{}
@@ -141,13 +143,20 @@ func (c Counter) TryPeng(t Tile) Counter {
 	return cNew
 }
 
-// TryChi TODO
+// TryChi attempts to form a chi with the given tile as the first in the set.
+// If it succeeds, it returns a new Counter with one of each of the given tile,
+// the next tile, and the one after that, all removed. Otherwise, it returns a
+// zero Counter, which can be tested with Counter.Valid().
+//
+// For example: (not the real syntax)
+//   Counter{B1:1 B2:2 B3:1 B4:1}.TryChi(B1) -> Counter{B2:1 B4:1}
+// Note that one B1, one B2 and one B3 were removed.
 func (c Counter) TryChi(t Tile) Counter {
 	if !t.IsBasic() {
 		return Counter{}
 	}
-	t2 := Tile{Suit: t.Suit, Value: t.Value+1}
-	t3 := Tile{Suit: t.Suit, Value: t.Value+2}
+	t2 := Tile{Suit: t.Suit, Value: t.Value + 1}
+	t3 := Tile{Suit: t.Suit, Value: t.Value + 2}
 	if !t2.Valid() || !t3.Valid() {
 		return Counter{}
 	}
@@ -161,7 +170,7 @@ func (c Counter) TryChi(t Tile) Counter {
 	mNew := make(map[Tile]int)
 	for tt, n := range c.m {
 		if (tt == t || tt == t2 || tt == t3) && n > 1 {
-			mNew[tt] = n-1
+			mNew[tt] = n - 1
 		} else {
 			mNew[tt] = n
 		}
@@ -182,7 +191,9 @@ func (c Counter) TryChi(t Tile) Counter {
 	return Counter{m: mNew, n: nNew, h: hNew}
 }
 
-// TryPair TODO
+// TryPair attempts to form a pair with the given tile. If it succeeds, it
+// returns a new Counter with those tiles removed. Otherwise, it returns a
+// zero Counter, which can be tested with Counter.Valid().
 func (c Counter) TryPair(t Tile) Counter {
 	if c.m[t] < 2 {
 		return Counter{}
