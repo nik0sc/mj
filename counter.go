@@ -9,10 +9,12 @@ import (
 // It offers constant-time lookup of tile counts. However creating and modifying it is
 // more expensive. The methods of Counter are guaranteed not to mutate the struct or cause
 // memory aliasing.
+//
+// Counter does not have a Marshal method, since the underlying representation is unordered.
+// Use Counter.ToHand(true).Marshal().
 type Counter struct {
 	m map[Tile]int
 	n int
-	h Hand
 }
 
 // CountEntry is a pair of a Tile and its count.
@@ -24,7 +26,7 @@ type CountEntry struct {
 
 // Valid returns true if the Counter is valid and all the tiles in the Counter are valid.
 func (c Counter) Valid() bool {
-	if c.m == nil || c.h == nil {
+	if c.m == nil {
 		return false
 	}
 
@@ -59,10 +61,22 @@ func (c Counter) Entries() []CountEntry {
 	return es
 }
 
-// ToHand converts this Counter to a Hand. The result is not guaranteed to be sorted.
-func (c Counter) ToHand() Hand {
+// ToHand converts this Counter to a Hand. If sorted is true, the hand is
+// guaranteed to be in sorted order.
+func (c Counter) ToHand(sorted bool) Hand {
 	h := make(Hand, c.n)
-	copy(h, c.h)
+	i := 0
+	for t, n := range c.m {
+		for j := 0; j < n; j++ {
+			h[i] = t
+			i++
+		}
+	}
+
+	if sorted {
+		sort.Sort(h)
+	}
+
 	return h
 }
 
@@ -90,15 +104,6 @@ func (c Counter) Remove(t Tile) Counter {
 	cNew.m[t]--
 	cNew.n--
 
-	remove := 0
-	for i, tNew := range cNew.h {
-		if tNew == t {
-			remove = i
-			break
-		}
-	}
-	cNew.h = append(cNew.h[:remove], cNew.h[remove+1:]...)
-
 	return cNew
 }
 
@@ -109,10 +114,7 @@ func (c Counter) Copy() Counter {
 		m[t] = n
 	}
 
-	h := make(Hand, len(c.h))
-	copy(h, c.h)
-
-	return Counter{m, c.n, h}
+	return Counter{m, c.n}
 }
 
 // TryPeng attempts to form a peng with the given tile. If it succeeds, it
@@ -126,19 +128,6 @@ func (c Counter) TryPeng(t Tile) Counter {
 	cNew := c.Copy()
 	cNew.m[t] -= 3
 	cNew.n -= 3
-
-	sort.Sort(cNew.h)
-	remove := -1
-	for i, ht := range cNew.h {
-		if ht == t {
-			remove = i
-			break
-		}
-	}
-	if remove == -1 {
-		panic("unreachable")
-	}
-	cNew.h = append(cNew.h[:remove], cNew.h[remove+3:]...)
 
 	return cNew
 }
@@ -176,19 +165,7 @@ func (c Counter) TryChi(t Tile) Counter {
 		}
 	}
 
-	hNew := make(Hand, nNew)
-	hIndex := 0
-	for tt, n := range mNew {
-		for i := 0; i < n; i++ {
-			hNew[hIndex] = tt
-			hIndex++
-		}
-	}
-	if !hNew.Valid() {
-		panic("hNew not created correctly")
-	}
-
-	return Counter{m: mNew, n: nNew, h: hNew}
+	return Counter{mNew, nNew}
 }
 
 // TryPair attempts to form a pair with the given tile. If it succeeds, it
@@ -203,44 +180,5 @@ func (c Counter) TryPair(t Tile) Counter {
 	cNew.m[t] -= 2
 	cNew.n -= 2
 
-	sort.Sort(cNew.h)
-	remove := -1
-	for i, ht := range cNew.h {
-		if ht == t {
-			remove = i
-			break
-		}
-	}
-	if remove == -1 {
-		panic("unreachable")
-	}
-	cNew.h = append(cNew.h[:remove], cNew.h[remove+2:]...)
-
 	return cNew
-}
-
-// _iter is a cool idea, because it lets us for-range over the Counter,
-// but it starts a goroutine and allocates a channel. Just use Entries() instead.
-func (c Counter) _iter() (iter chan CountEntry, stop chan struct{}) {
-	iter = make(chan CountEntry)
-	stop = make(chan struct{})
-
-	go func() {
-	iterFor:
-		for t, c := range c.m {
-			e := CountEntry{
-				Tile:  t,
-				Count: int16(c),
-			}
-			select {
-			case iter <- e:
-				continue
-			case <-stop:
-				break iterFor
-			}
-		}
-		close(iter)
-	}()
-
-	return
 }

@@ -103,9 +103,7 @@ func (h Hand) ToCount() Counter {
 	for _, t := range h {
 		c[t]++
 	}
-	hNew := make(Hand, len(h))
-	copy(hNew, h)
-	return Counter{c, len(h), hNew}
+	return Counter{c, len(h)}
 }
 
 // Split splits a Hand into sub-Hands that each contain the tiles belonging to the same suit.
