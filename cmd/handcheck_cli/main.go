@@ -6,8 +6,8 @@ import (
 	"os"
 	"sort"
 
-	"mj"
-	"mj/handcheck"
+	"github.com/nik0sc/mj"
+	"github.com/nik0sc/mj/handcheck"
 )
 
 func main() {

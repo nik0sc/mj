@@ -4,7 +4,7 @@ import (
 	"sort"
 	"testing"
 
-	"mj"
+	"github.com/nik0sc/mj"
 )
 
 func Test_optChecker_Check(t *testing.T) {

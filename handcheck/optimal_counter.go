@@ -3,7 +3,7 @@ package handcheck
 import (
 	"fmt"
 
-	"mj"
+	"github.com/nik0sc/mj"
 )
 
 type OptCountChecker struct {
@@ -18,15 +18,15 @@ type OptCountChecker struct {
 }
 
 type ocstate struct {
-	res Result
+	res       Result
 	freeCount mj.Counter
-	shared *ocshared
+	shared    *ocshared
 }
 
 type ocshared struct {
-	memo map[string]Result
+	memo      map[string]Result
 	stepCount int
-	memoHits int
+	memoHits  int
 }
 
 func (c OptCountChecker) Check(hand mj.Hand) Result {

@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"syscall/js"
 
-	"mj"
-	"mj/handcheck"
+	"github.com/nik0sc/mj"
+	"github.com/nik0sc/mj/handcheck"
 )
 
 // window.optCheck(String, Function(String, String), Boolean, Boolean)

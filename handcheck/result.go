@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"mj"
+	"github.com/nik0sc/mj"
 )
 
 const (

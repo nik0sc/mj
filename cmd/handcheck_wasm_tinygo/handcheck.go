@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"syscall/js"
 
-	"mj"
-	"mj/handcheck"
+	"github.com/nik0sc/mj"
+	"github.com/nik0sc/mj/handcheck"
 )
 
 //export optCheck

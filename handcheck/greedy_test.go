@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"mj"
+	"github.com/nik0sc/mj"
 )
 
 func Test_handChecker_Check(t *testing.T) {

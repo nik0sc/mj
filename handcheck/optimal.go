@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"mj"
+	"github.com/nik0sc/mj"
 )
 
 // OptChecker implements an optimal hand checker.
