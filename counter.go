@@ -25,6 +25,7 @@ type CountEntry struct {
 }
 
 // Valid returns true if the Counter is valid and all the tiles in the Counter are valid.
+// The zero Counter causes Valid to return false.
 func (c Counter) Valid() bool {
 	if c.m == nil {
 		return false
@@ -118,40 +119,52 @@ func (c Counter) Copy() Counter {
 }
 
 // TryPeng attempts to form a peng with the given tile. If it succeeds, it
-// returns a new Counter with those tiles removed. Otherwise, it returns a
-// zero Counter, which can be tested with Counter.Valid().
-func (c Counter) TryPeng(t Tile) Counter {
+// returns (a new Counter with the peng removed, true). Otherwise, it
+// returns (a zero Counter, false).
+//
+// It is possible to return (zero Counter, true) if the 3 tiles to be removed
+// are the only tiles in the original Counter.
+func (c Counter) TryPeng(t Tile) (Counter, bool) {
 	if c.m[t] < 3 {
-		return Counter{}
+		return Counter{}, false
+	} else if c.m[t] == 3 {
+		return Counter{}, true
 	}
 
 	cNew := c.Copy()
 	cNew.m[t] -= 3
 	cNew.n -= 3
 
-	return cNew
+	return cNew, true
 }
 
 // TryChi attempts to form a chi with the given tile as the first in the set.
 // If it succeeds, it returns a new Counter with one of each of the given tile,
-// the next tile, and the one after that, all removed. Otherwise, it returns a
-// zero Counter, which can be tested with Counter.Valid().
+// the next tile, and the one after that, all removed. Otherwise, it returns
+// (a zero Counter, false).
 //
 // For example: (not the real syntax)
 //   Counter{B1:1 B2:2 B3:1 B4:1}.TryChi(B1) -> Counter{B2:1 B4:1}
 // Note that one B1, one B2 and one B3 were removed.
-func (c Counter) TryChi(t Tile) Counter {
+//
+// It is possible to return (zero Counter, true) if the 3 tiles to be removed
+// are the only tiles in the original Counter.
+func (c Counter) TryChi(t Tile) (Counter, bool) {
 	if !t.IsBasic() {
-		return Counter{}
+		return Counter{}, false
 	}
 	t2 := Tile{Suit: t.Suit, Value: t.Value + 1}
 	t3 := Tile{Suit: t.Suit, Value: t.Value + 2}
 	if !t2.Valid() || !t3.Valid() {
-		return Counter{}
+		return Counter{}, false
 	}
 
 	if c.m[t] <= 0 || c.m[t2] <= 0 || c.m[t3] <= 0 {
-		return Counter{}
+		return Counter{}, false
+	}
+
+	if c.n == 3 && c.m[t] == 1 && c.m[t2] == 1 && c.m[t3] == 1 {
+		return Counter{}, true
 	}
 
 	// don't bother with Copy
@@ -165,20 +178,25 @@ func (c Counter) TryChi(t Tile) Counter {
 		}
 	}
 
-	return Counter{mNew, nNew}
+	return Counter{mNew, nNew}, true
 }
 
-// TryPair attempts to form a pair with the given tile. If it succeeds, it
-// returns a new Counter with those tiles removed. Otherwise, it returns a
-// zero Counter, which can be tested with Counter.Valid().
-func (c Counter) TryPair(t Tile) Counter {
+// TryPeng attempts to form a pair with the given tile. If it succeeds, it
+// returns (a new Counter with the pair removed, true). Otherwise, it
+// returns (a zero Counter, false).
+//
+// It is possible to return (zero Counter, true) if the 2 tiles to be removed
+// are the only tiles in the original Counter.
+func (c Counter) TryPair(t Tile) (Counter, bool) {
 	if c.m[t] < 2 {
-		return Counter{}
+		return Counter{}, false
+	} else if c.m[t] == 2 {
+		return Counter{}, true
 	}
 
 	cNew := c.Copy()
 	cNew.m[t] -= 2
 	cNew.n -= 2
 
-	return cNew
+	return cNew, true
 }
