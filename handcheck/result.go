@@ -3,6 +3,7 @@ package handcheck
 import (
 	"bytes"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/nik0sc/mj"
@@ -129,6 +130,14 @@ func (r Result) score() int {
 	// and a tile in a peng/chi is worth 1.333...
 	return 4*len(r.Pengs) + 4*len(r.Chis) + 2*len(r.Pairs)
 	// a good compiler would turn that into left shifts and adds
+}
+
+// sort sorts the groups in the result in-place
+func (r Result) sort() {
+	sort.Sort(mj.Hand(r.Pengs))
+	sort.Sort(mj.Hand(r.Chis))
+	sort.Sort(mj.Hand(r.Pairs))
+	sort.Sort(r.Free)
 }
 
 func UnmarshalResult(repr string) Result {

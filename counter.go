@@ -2,6 +2,7 @@ package mj
 
 import (
 	"bytes"
+	"fmt"
 	"sort"
 )
 
@@ -12,9 +13,13 @@ import (
 //
 // Counter does not have a Marshal method, since the underlying representation is unordered.
 // Use Counter.ToHand(true).Marshal().
+//
+// You can bypass the methods of Counter by converting to a map[Tile]int with Counter.Map(),
+// modifying the map, and passing it to NewCounter(), which will also verify your map.
 type Counter struct {
 	m map[Tile]int
 	n int
+	// Unlike Hand, this is an opaque type
 }
 
 // CountEntry is a pair of a Tile and its count.
@@ -22,6 +27,27 @@ type CountEntry struct {
 	Tile  Tile
 	Count int16
 	// This fits nicely in 4 bytes and should not require padding in most architectures.
+}
+
+// NewCounter creates a new Counter from a map of tiles to their counts.
+func NewCounter(m map[Tile]int) (Counter, error) {
+	c := Counter{m: make(map[Tile]int, len(m))}
+
+	for t, n := range m {
+		if !t.Valid() {
+			return Counter{}, fmt.Errorf("tile %+v is invalid", t)
+		}
+		if n < 0 {
+			return Counter{}, fmt.Errorf("invalid count for tile %+v: %d", t, n)
+		}
+		if n == 0 {
+			continue
+		}
+		c.m[t] += n
+		c.n += n
+	}
+
+	return c, nil
 }
 
 // Valid returns true if the Counter is valid and all the tiles in the Counter are valid.
@@ -49,12 +75,28 @@ func (c Counter) Get(t Tile) int {
 	return c.m[t]
 }
 
+// Map returns a map of Tiles to their counts in the Counter. It is
+// the inverse of NewCounter(). This map is a copy, so changes to
+// the Counter won't be reflected in this map, or vice versa.
+func (c Counter) Map() map[Tile]int {
+	if c.m == nil {
+		return nil
+	}
+
+	m := make(map[Tile]int, len(c.m))
+	for t, n := range c.m {
+		m[t] = n
+	}
+	return m
+}
+
 // Entries returns all tile-count pairs in the Counter.
 //
 // Warning: CountEntry.Count is int16, not int. This means the maximum count
 // for a tile is 32767. If you really need to count more tiles than that,
 // use Get() instead.
 func (c Counter) Entries() []CountEntry {
+	// If we have Map, what's the point of Entries?
 	es := make([]CountEntry, 0, len(c.m))
 	for t, cnt := range c.m {
 		es = append(es, CountEntry{Tile: t, Count: int16(cnt)})
@@ -125,17 +167,7 @@ func (c Counter) Copy() Counter {
 // It is possible to return (zero Counter, true) if the 3 tiles to be removed
 // are the only tiles in the original Counter.
 func (c Counter) TryPeng(t Tile) (Counter, bool) {
-	if c.m[t] < 3 {
-		return Counter{}, false
-	} else if c.m[t] == 3 {
-		return Counter{}, true
-	}
-
-	cNew := c.Copy()
-	cNew.m[t] -= 3
-	cNew.n -= 3
-
-	return cNew, true
+	return c.tryMeldRun(t, 3)
 }
 
 // TryChi attempts to form a chi with the given tile as the first in the set.
@@ -171,8 +203,10 @@ func (c Counter) TryChi(t Tile) (Counter, bool) {
 	nNew := c.n - 3
 	mNew := make(map[Tile]int)
 	for tt, n := range c.m {
-		if (tt == t || tt == t2 || tt == t3) && n > 1 {
-			mNew[tt] = n - 1
+		if tt == t || tt == t2 || tt == t3 {
+			if n > 1 {
+				mNew[tt] = n - 1
+			} // else, don't copy into the new map
 		} else {
 			mNew[tt] = n
 		}
@@ -188,15 +222,20 @@ func (c Counter) TryChi(t Tile) (Counter, bool) {
 // It is possible to return (zero Counter, true) if the 2 tiles to be removed
 // are the only tiles in the original Counter.
 func (c Counter) TryPair(t Tile) (Counter, bool) {
-	if c.m[t] < 2 {
+	return c.tryMeldRun(t, 2)
+}
+
+// tryMeldRun generalises TryPeng and TryPair.
+func (c Counter) tryMeldRun(t Tile, n int) (Counter, bool) {
+	if c.m[t] < n {
 		return Counter{}, false
-	} else if c.m[t] == 2 {
+	} else if c.n == n && c.m[t] == n {
 		return Counter{}, true
 	}
 
 	cNew := c.Copy()
-	cNew.m[t] -= 2
-	cNew.n -= 2
+	cNew.m[t] -= n
+	cNew.n -= n
 
 	return cNew, true
 }
