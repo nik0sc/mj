@@ -24,9 +24,7 @@ type gstate struct {
 }
 
 type gshared struct {
-	memo      map[string]GreedyResult
-	stepcount int
-	memohit   int
+	stepCount int
 }
 
 func (c GreedyChecker) Check(hand mj.Hand) GreedyResult {
@@ -63,13 +61,11 @@ func (c GreedyChecker) Check(hand mj.Hand) GreedyResult {
 
 func (c GreedyChecker) start(h mj.Hand) GreedyResult {
 	_ = c
-	m := make(map[string]GreedyResult)
-	s := gstate{GreedyResult{}, h, nil, &gshared{memo: m}}
+	s := gstate{GreedyResult{}, h, nil, &gshared{}}
 
 	r := s.step()
 	if writeMetrics {
-		fmt.Printf("shared: len(memo)=%d steps=%d memohits=%d\n",
-			len(s.shared.memo), s.shared.stepcount, s.shared.memohit)
+		fmt.Printf("shared: steps=%d\n", s.shared.stepCount)
 	}
 
 	return r
@@ -77,7 +73,7 @@ func (c GreedyChecker) start(h mj.Hand) GreedyResult {
 
 func (s gstate) step() GreedyResult {
 	if writeMetrics {
-		s.shared.stepcount++
+		s.shared.stepCount++
 	}
 	if traceSteps {
 		fmt.Printf("at %s\n", s.h.String())
@@ -98,17 +94,17 @@ func (s gstate) step() GreedyResult {
 
 	for i, t := range s.h {
 		hNew := s.h.Remove(i)
-		hNewRepr := hNew.Marshal()
-		if r, ok := s.shared.memo[hNewRepr]; ok {
-			if writeMetrics {
-				s.shared.memohit++
-			}
-			if r.Ok {
-				return r
-			}
-		}
 
-		next := s.copyForNext(hNew, t)
+		buildNew := make(mj.Hand, len(s.build)+1)
+		copy(buildNew, s.build)
+		buildNew[len(s.build)] = t
+
+		next := gstate{
+			res:    s.res,
+			h:      hNew,
+			build:  buildNew,
+			shared: s.shared,
+		}
 
 		if len(next.build) == 3 {
 			if next.build.IsPeng() {
@@ -119,39 +115,14 @@ func (s gstate) step() GreedyResult {
 				next.build = nil
 			} else {
 				// Failed build
-				s.addMemo(hNewRepr, GreedyResult{})
 				continue
 			}
 		}
 
 		result := next.step()
-		s.addMemo(hNewRepr, result)
 		if result.Ok {
 			return result
 		}
 	}
 	return GreedyResult{}
-}
-
-func (s gstate) addMemo(repr string, res GreedyResult) {
-	if r, ok := s.shared.memo[repr]; ok {
-		if res == r {
-			return
-		}
-		panic(fmt.Sprintf("reset of memo key %x", repr))
-	}
-	s.shared.memo[repr] = res
-}
-
-func (s gstate) copyForNext(hNew mj.Hand, t mj.Tile) gstate {
-	buildNew := make(mj.Hand, len(s.build)+1)
-	copy(buildNew, s.build)
-	buildNew[len(s.build)] = t
-
-	return gstate{
-		res:    s.res,
-		h:      hNew,
-		build:  buildNew,
-		shared: s.shared,
-	}
 }

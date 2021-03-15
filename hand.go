@@ -251,15 +251,38 @@ func (h Hand) TryChiAt(i int) (Hand, bool) {
 }
 
 func (h Hand) IsPair() bool {
-	panic("stub")
+	if len(h) != 2 {
+		return false
+	}
+	if !h[0].CanMeld() {
+		return false
+	}
+	return h[0] == h[1]
 }
 
 func (h Hand) IsPeng() bool {
-	panic("stub")
+	if len(h) != 3 {
+		return false
+	}
+	if !h[0].CanMeld() {
+		return false
+	}
+	return h[0] == h[1] && h[1] == h[2]
 }
 
 func (h Hand) IsChi() bool {
-	panic("stub")
+	if len(h) != 3 {
+		return false
+	}
+	if !h[0].IsBasic() {
+		return false
+	}
+	tRepr := h[0].Marshal()
+	if tRepr+1 == h[1].Marshal() && tRepr+2 == h[2].Marshal() {
+		return true
+	} else {
+		return false
+	}
 }
 
 func UnmarshalHand(s string) Hand {
