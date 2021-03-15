@@ -15,7 +15,7 @@ type GreedyChecker struct {
 }
 
 type gstate struct {
-	res GreedyResult
+	res Result
 
 	h     mj.Hand
 	build mj.Hand
@@ -27,51 +27,51 @@ type gshared struct {
 	stepCount int
 }
 
-func (c GreedyChecker) Check(hand mj.Hand) GreedyResult {
+func (c GreedyChecker) Check(hand mj.Hand) Result {
 	h := make(mj.Hand, len(hand))
 	copy(h, hand)
 	sort.Sort(h)
 
+	var r Result
 	if c.Split {
+		// no need to sort again
 		hsplit := h.Split(false)
-		rs := make([]GreedyResult, 0, len(hsplit))
+		rs := make([]Result, 0, len(hsplit))
 		for _, hs := range hsplit {
+			// improvement: could start in goroutines
 			rs = append(rs, c.start(hs))
 		}
 
-		r := GreedyResult{Ok: true}
 		for _, rsub := range rs {
-			if !rsub.Ok {
-				if c.FailFast {
-					r = GreedyResult{}
-					break
-				} else {
-					r.Ok = false
-				}
-			}
-			r.Peng += rsub.Peng
-			r.Chi += rsub.Chi
-			r.Pair += rsub.Pair
+			r.Pengs = append(r.Pengs, rsub.Pengs...)
+			r.Chis = append(r.Chis, rsub.Chis...)
+			r.Pairs = append(r.Pairs, rsub.Pairs...)
+			r.Free = append(r.Free, rsub.Free...)
 		}
-		return r
 	} else {
-		return c.start(h)
-	}
-}
-
-func (c GreedyChecker) start(h mj.Hand) GreedyResult {
-	_ = c
-	s := gstate{GreedyResult{}, h, nil, &gshared{}}
-
-	r := s.step()
-	if writeMetrics {
-		fmt.Printf("shared: steps=%d\n", s.shared.stepCount)
+		r = c.start(h)
 	}
 
 	return r
 }
 
-func (s gstate) step() GreedyResult {
+func (c GreedyChecker) start(h mj.Hand) Result {
+	_ = c
+	s := gstate{h: h, shared: &gshared{}}
+
+	r, ok := s.step()
+	if writeMetrics {
+		fmt.Printf("shared: ok=%t, steps=%d\n", ok, s.shared.stepCount)
+	}
+
+	if ok {
+		return r
+	} else {
+		return Result{Free: h}
+	}
+}
+
+func (s gstate) step() (Result, bool) {
 	if writeMetrics {
 		s.shared.stepCount++
 	}
@@ -86,9 +86,20 @@ func (s gstate) step() GreedyResult {
 	if len(s.h) == 2 {
 		if s.h.IsPair() {
 			// a winner!
-			return GreedyResult{true, s.res.Peng, s.res.Chi, 1, 0}
+			nextPairs := make([]mj.Tile, len(s.res.Pairs)+1)
+
+			copy(nextPairs, s.res.Pairs)
+			nextPairs[len(nextPairs)-1] = s.h[0]
+
+			r := Result{
+				Pengs: s.res.Pengs,
+				Chis:  s.res.Chis,
+				Pairs: nextPairs,
+				Free:  nil,
+			}
+			return r, true
 		} else {
-			return GreedyResult{false, s.res.Peng, s.res.Chi, 0, 0}
+			return Result{}, false
 		}
 	}
 
@@ -108,10 +119,20 @@ func (s gstate) step() GreedyResult {
 
 		if len(next.build) == 3 {
 			if next.build.IsPeng() {
-				next.res.Peng++
+				nextPengs := make([]mj.Tile, len(s.res.Pengs)+1)
+
+				copy(nextPengs, s.res.Pengs)
+				nextPengs[len(nextPengs)-1] = next.build[0]
+
+				next.res.Pengs = nextPengs
 				next.build = nil
 			} else if next.build.IsChi() {
-				next.res.Chi++
+				nextChis := make([]mj.Tile, len(s.res.Chis)+1)
+
+				copy(nextChis, s.res.Chis)
+				nextChis[len(nextChis)-1] = next.build[0]
+
+				next.res.Chis = nextChis
 				next.build = nil
 			} else {
 				// Failed build
@@ -119,10 +140,10 @@ func (s gstate) step() GreedyResult {
 			}
 		}
 
-		result := next.step()
-		if result.Ok {
-			return result
+		result, ok := next.step()
+		if ok {
+			return result, ok
 		}
 	}
-	return GreedyResult{}
+	return Result{}, false
 }

@@ -104,8 +104,7 @@ func main() {
 			}
 
 			r := handcheck.GreedyChecker{Split: split, FailFast: failfast}.Check(h)
-			rstr := fmt.Sprintf("%+v", r)
-			cb.Invoke(rstr, js.Null())
+			cb.Invoke(r.String(), js.Null())
 		}()
 		return nil
 	}))
