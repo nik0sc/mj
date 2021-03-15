@@ -35,18 +35,35 @@ func optCheckSync(hand string, split bool, memo bool) string {
 	return r.String()
 }
 
+type checker interface {
+	Check(hand mj.Hand) handcheck.Result
+}
+
 func main() {
 	var c chan struct{}
-	js.Global().Set("optCheck", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+	js.Global().Set("checkHand", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		_ = this
 
-		hand := args[0].String()
-		cb := args[1]
+		alg := args[0].String()
+		hand := args[1].String()
+		cb := args[2]
 		if cb.Type() != js.TypeFunction {
 			panic(fmt.Sprintf("pos arg 1 is not Function, it is %s\n", cb.Type().String()))
 		}
-		split := args[2].Bool()
-		memo := args[3].Bool()
+		split := args[3].Bool()
+		memo := args[4].Bool()
+
+		var c checker
+		switch alg {
+		case "opt":
+			c = handcheck.OptChecker{Split: split, UseMemo: memo}
+		case "optcnt":
+			c = handcheck.OptCountChecker{Split: split, UseMemo: memo}
+		case "greedy":
+			c = handcheck.GreedyChecker{Split: split}
+		default:
+			panic("unrecognised alg: " + alg)
+		}
 
 		go func() {
 			h, err := mj.ParseHand(hand)
@@ -55,56 +72,7 @@ func main() {
 				return
 			}
 
-			r := handcheck.OptChecker{Split: split, UseMemo: memo}.Check(h)
-			cb.Invoke(r.String(), js.Null())
-		}()
-		return nil
-	}))
-
-	js.Global().Set("optCountCheck", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		_ = this
-
-		hand := args[0].String()
-		cb := args[1]
-		if cb.Type() != js.TypeFunction {
-			panic(fmt.Sprintf("pos arg 1 is not Function, it is %s\n", cb.Type().String()))
-		}
-		split := args[2].Bool()
-		memo := args[3].Bool()
-
-		go func() {
-			h, err := mj.ParseHand(hand)
-			if err != nil {
-				cb.Invoke(js.Null(), fmt.Sprintf("cannot parse hand: %s", err.Error()))
-				return
-			}
-
-			r := handcheck.OptCountChecker{Split: split, UseMemo: memo}.Check(h)
-			cb.Invoke(r.String(), js.Null())
-		}()
-		return nil
-	}))
-
-	js.Global().Set("greedyCheck", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		_ = this
-
-		hand := args[0].String()
-		cb := args[1]
-		if cb.Type() != js.TypeFunction {
-			panic(fmt.Sprintf("pos arg 1 is not Function, it is %s\n", cb.Type().String()))
-		}
-		split := args[2].Bool()
-		failfast := args[3].Bool()
-
-		go func() {
-			h, err := mj.ParseHand(hand)
-			if err != nil {
-				cb.Invoke(js.Null(), fmt.Sprintf("cannot parse hand: %s", err.Error()))
-				return
-			}
-
-			r := handcheck.GreedyChecker{Split: split, FailFast: failfast}.Check(h)
-			cb.Invoke(r.String(), js.Null())
+			cb.Invoke(c.Check(h).String(), js.Null())
 		}()
 		return nil
 	}))

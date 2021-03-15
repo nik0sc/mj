@@ -1,34 +1,21 @@
 "use strict";
 
 let wasm;
-let eventCount = 0;
 const go = new Go();
 
 const readyInput = function() {
-    if (eventCount < 1) {
-        eventCount++;
-    }
-
     const resultEl = document.getElementById("result");
     const errorEl = document.getElementById("error");
     const strategyEl = document.getElementById("selStrategy");
-    const strategies = {
-        "opt": optCheck,
-        "optcnt": optCountCheck,
-        "greedy": greedyCheck
-    };
-
-    document.getElementById("btnCheck").onclick = () => {
-        const h = document.getElementById("inpHand").value;
+    const inpHandEl = document.getElementById("inpHand");
+    const btnCheckEl = document.getElementById("btnCheck");
+    btnCheckEl.onclick = () => {
+        const h = inpHandEl.value;
         const split = document.getElementById("chkSplit").checked;
         const memo = document.getElementById("chkMemo").checked;
-        const strategy = strategies[strategyEl.value];
-        if (typeof strategy === undefined) {
-            console.error("unknown strategy: " + strategyEl.value);
-            return
-        }
+        const strategy = strategyEl.value;
 
-        strategy(h, (result, error) => {
+        checkHand(strategy, h, (result, error) => {
             if (error != null) {
                 resultEl.textContent = "";
                 errorEl.textContent = error;
@@ -41,6 +28,14 @@ const readyInput = function() {
     };
     document.getElementById("btnCheck").disabled = false;
     errorEl.textContent = "";
+
+    document.querySelectorAll(".tryout").forEach((el) => {
+        el.addEventListener("click", () => {
+            inpHandEl.value = el.textContent;
+            btnCheckEl.click();
+        })
+    })
+
     console.log("input ready");
 }
 

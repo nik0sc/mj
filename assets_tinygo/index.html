@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
 
 <head>
     <meta charset="utf-8">
@@ -20,6 +20,12 @@
         }
         .nerds {
             font-style: italic;
+        }
+        .tryout {
+            color: blue;
+        }
+        .tryout:visited {
+            color: blue;
         }
         #inpHand {
             width: 200pt;
@@ -47,8 +53,8 @@
     <label for="selStrategy">Strategy:
         <select id="selStrategy">
             <option value="opt" selected>Optimal</option>
-            <option value="optcnt" disabled>Optimal Counter</option>
-            <option value="greedy">Greedy (buggy)</option>
+            <option value="optcnt">Optimal Counter</option>
+            <option value="greedy">Greedy</option>
         </select>
     </label>
     <label for="chkSplit">Split<input type="checkbox" id="chkSplit"/></label>
@@ -56,8 +62,17 @@
 </p>
 
 <p id="result"></p>
-<p id="error">Loading... checker is 145KB, please be patient (if there is no change, try refreshing the page)</p>
+<p id="error">Loading... checker is 160KB, please be patient (if there is no change, try refreshing the page)</p>
 
+<p>Try out these hands:</p>
+<ul>
+    <li><a href="#" class="tryout">b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1</a></li>
+    <li><a href="#" class="tryout">b1 b2 b3 b3 b4 b5 b5 b6 b7 b7 b8 b9 b9 b9</a></li>
+    <li><a href="#" class="tryout">c1 c2 c3 c3 c3 c4 c5 c6</a></li>
+    <li><a href="#" class="tryout">c1 c1 c1 c2 c3 c4 c5 c6</a></li>
+    <li><a href="#" class="tryout">b1 b3 b5 b7 b9 c1 c3 c5 c7 c9 w1 w3 w5 w7</a></li>
+    <li><a href="#" class="tryout">b1 b2 b3 b1 b2 b3</a></li>
+</ul>
 <p>Notes:</p>
 <ul>
     <li>Enter hands as two-character suit-value pairs separated by spaces.
@@ -78,14 +93,22 @@
     <li>Solved hands are shown in the order of pengs/pongs, chis/chows and pairs.</li>
     <li>Interesting hands like 13 orphans or gang/kong are not implemented.</li>
 </ul>
-<p class="nerds">Notes for nerds:</p>
-<ul class="nerds">
-    <li>Split splits your hand into sub-hands of the same suit before solving.</li>
-    <li>Memo controls memoization, turning it off will cause freezing on certain hands. Try it with 14 of the same tile. I
-        think all goroutines run on the main thread in js/wasm.</li>
-    <li>Check the console for call stats.</li>
-    <li>The wasm is compiled with tinygo, it maaaay be "wrong" compared to gc.</li>
-</ul>
+<div class="nerds">
+    <p>Notes for nerds:</p>
+    <ul>
+        <li>Split splits your hand into sub-hands of the same suit before solving.</li>
+        <li>Memo controls memoization, turning it off will cause freezing on certain hands. Try it with 14 of the same tile. I
+            think all goroutines run on the main thread in js/wasm.</li>
+        <li>Check the console for call stats.</li>
+        <li>The wasm is compiled with tinygo, it maaaay be "wrong" compared to gc.</li>
+    </ul>
+    <p>The strategies:</p>
+    <ul>
+        <li>Optimal: Backtracking/DP solution using a slice to hold tiles at each subproblem.</li>
+        <li>Optimal Counter: Like Optimal, but uses a map of tiles to their counts. Lower branching factor, but higher memory use.</li>
+        <li>Greedy: Greedily builds 3-tile melds, then returns a solution if it can make a single pair with no tiles remaining.</li>
+    </ul>
+</div>
 </body>
 
 </html>
