@@ -150,3 +150,33 @@ func Test_OptChecker_Check(t *testing.T) {
 		})
 	}
 }
+
+func Benchmark_OptChecker_AllP(b *testing.B) {
+	hand, _ := mj.ParseHand("b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1")
+	benchmark_OptChecker(b, hand)
+
+}
+
+func Benchmark_OptChecker_AllPReal(b *testing.B) {
+	hand, _ := mj.ParseHand("b1 b1 b1 b2 b2 b2 b3 b3 b3 b4 b4 b4 b5 b5")
+	benchmark_OptChecker(b, hand)
+}
+
+func Benchmark_OptChecker_AllC(b *testing.B) {
+	hand, _ := mj.ParseHand("b1 b2 b3 b3 b4 b5 b5 b6 b7 b7 b8 b9 b9 b9")
+	benchmark_OptChecker(b, hand)
+
+}
+
+func Benchmark_OptChecker_NS(b *testing.B) {
+	hand, _ := mj.ParseHand("w1 b7 w4 c5 b9 he w5 hf w5 c3 b8 hf hn hf")
+	benchmark_OptChecker(b, hand)
+}
+
+func benchmark_OptChecker(b *testing.B, h mj.Hand) {
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_ = OptChecker{UseMemo: true}.Check(h)
+	}
+}
