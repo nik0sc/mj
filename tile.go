@@ -139,6 +139,7 @@ func (t Tile) IsBasic() bool {
 	return t.Valid() && t.Suit != Flower && t.Suit != Honour
 }
 
+// UnmarshalTile is the inverse of Tile.Marshal().
 func UnmarshalTile(b byte) Tile {
 	t := Tile{
 		Suit:  Suit(b >> 5),

@@ -7,6 +7,11 @@ import (
 	"github.com/nik0sc/mj"
 )
 
+// GreedyChecker greedily builds 3-tile melds and then returns a solution if it can
+// build a pair with the last 2 tiles in the hand. While it is not optimal, it can
+// be much faster than the Opt* checkers with certain hands.
+//
+// You probably don't want to use this checker for most cases.
 type GreedyChecker struct {
 	// Split=true breaks the guarantee that if we return ok=false there
 	// is no possible winning interpretation of the hand

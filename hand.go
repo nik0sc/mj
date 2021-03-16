@@ -258,6 +258,7 @@ func (h Hand) TryChiAt(i int) (Hand, bool) {
 	return nil, false
 }
 
+// IsPair returns true if the Hand contains exactly 2 identical tiles.
 func (h Hand) IsPair() bool {
 	if len(h) != 2 {
 		return false
@@ -268,6 +269,7 @@ func (h Hand) IsPair() bool {
 	return h[0] == h[1]
 }
 
+// IsPeng returns true if the Hand contains exactly 3 identical tiles.
 func (h Hand) IsPeng() bool {
 	if len(h) != 3 {
 		return false
@@ -278,6 +280,8 @@ func (h Hand) IsPeng() bool {
 	return h[0] == h[1] && h[1] == h[2]
 }
 
+// IsChi returns true if the Hand contains exactly 3 tiles that are consecutive
+// and all in one of the Bamboo, Coin or Wan suits.
 func (h Hand) IsChi() bool {
 	if len(h) != 3 {
 		return false
@@ -293,6 +297,7 @@ func (h Hand) IsChi() bool {
 	}
 }
 
+// UnmarshalHand is the inverse of Hand.Marshal().
 func UnmarshalHand(s string) Hand {
 	repr := []byte(s)
 	h := make(Hand, len(repr))

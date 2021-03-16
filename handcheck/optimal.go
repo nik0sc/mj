@@ -12,8 +12,11 @@ import (
 // then maximises the number of 3-tile melds.
 // Note that it may be possible for a hand to have multiple optimal solutions,
 // only one will be returned in that case.
-//
 // The zero value is safe to use immediately (without any optimisations).
+//
+// Under the hood, this uses mj.Hand to represent the free tiles at each subproblem.
+// While this has a higher branching factor, it actually has lower runtime and memory
+// usage in average cases.
 type OptChecker struct {
 	// If OptChecker is reused for multiple hands (perhaps in a mahjong-playing AI agent),
 	// we can cache the results.

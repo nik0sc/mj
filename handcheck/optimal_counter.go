@@ -7,6 +7,16 @@ import (
 	"github.com/nik0sc/mj"
 )
 
+// OptCountChecker implements an optimal hand checker.
+// The optimal result minimises the number of tiles not participating in a meld,
+// then maximises the number of 3-tile melds.
+// Note that it may be possible for a hand to have multiple optimal solutions,
+// only one will be returned in that case.
+// The zero value is safe to use immediately (without any optimisations).
+//
+// Under the hood, this uses mj.Counter to represent the free tiles at each subproblem.
+// While this reduces the branching factor, it actually has higher runtime and memory
+// usage in average cases.
 type OptCountChecker struct {
 	// cache map[string]Result
 
