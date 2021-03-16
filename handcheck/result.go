@@ -16,25 +16,14 @@ const (
 	traceSteps = false
 )
 
-// GreedyResult is the solution found by GreedyChecker. It contains
-// totals of melds and unused tiles, not the actual tiles.
-type GreedyResult struct {
-	// Ok is true if this hand is optimal (has no unused tiles).
-	Ok     bool
-	Peng   int
-	Chi    int
-	Pair   int
-	Unused int
-}
-
 // Result is the optimal solution found by OptChecker and friends.
 type Result struct {
 	// Each tile represents a meld of 3 identical tiles.
-	Pengs []mj.Tile
+	Pengs mj.Hand
 	// Each tile is the first of 3 consecutive tiles.
-	Chis []mj.Tile
+	Chis mj.Hand
 	// Each tile represents a pair.
-	Pairs []mj.Tile
+	Pairs mj.Hand
 	// All the leftover tiles.
 	Free mj.Hand
 }
@@ -92,27 +81,32 @@ func (r Result) Marshal() string {
 	return b.String()
 }
 
-func (r Result) Copy() Result {
+// Copy deep-copies the Result. The new Result may also be sorted.
+func (r Result) Copy(sorted bool) Result {
 	var rNew Result
 
 	if r.Pengs != nil {
-		rNew.Pengs = make([]mj.Tile, len(r.Pengs))
+		rNew.Pengs = make(mj.Hand, len(r.Pengs))
 		copy(rNew.Pengs, r.Pengs)
 	}
 
 	if r.Chis != nil {
-		rNew.Chis = make([]mj.Tile, len(r.Chis))
+		rNew.Chis = make(mj.Hand, len(r.Chis))
 		copy(rNew.Chis, r.Chis)
 	}
 
 	if r.Pairs != nil {
-		rNew.Pairs = make([]mj.Tile, len(r.Pairs))
+		rNew.Pairs = make(mj.Hand, len(r.Pairs))
 		copy(rNew.Pairs, r.Pairs)
 	}
 
 	if r.Free != nil {
 		rNew.Free = make(mj.Hand, len(r.Free))
 		copy(rNew.Free, r.Free)
+	}
+
+	if sorted {
+		rNew.sort()
 	}
 
 	return rNew
@@ -134,9 +128,9 @@ func (r Result) score() int {
 
 // sort sorts the groups in the result in-place
 func (r Result) sort() {
-	sort.Sort(mj.Hand(r.Pengs))
-	sort.Sort(mj.Hand(r.Chis))
-	sort.Sort(mj.Hand(r.Pairs))
+	sort.Sort(r.Pengs)
+	sort.Sort(r.Chis)
+	sort.Sort(r.Pairs)
 	sort.Sort(r.Free)
 }
 

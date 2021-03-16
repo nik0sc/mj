@@ -24,13 +24,7 @@ type ocstate struct {
 	// the ocstate.free field already has that information.
 	res    Result
 	free   mj.Counter
-	shared *ocshared
-}
-
-type ocshared struct {
-	memo      map[string]string
-	stepCount int
-	memoHits  int
+	shared *shared
 }
 
 // Check finds the optimal grouping for a hand.
@@ -39,7 +33,7 @@ func (c OptCountChecker) Check(hand mj.Hand) Result {
 	copy(h, hand)
 	sort.Sort(h)
 
-	shared := ocshared{}
+	shared := shared{}
 	if c.UseMemo {
 		shared.memo = make(map[string]string)
 	}
@@ -98,32 +92,22 @@ func (s ocstate) step() Result {
 	}
 
 	repr := s.free.ToHand(true).Marshal()
-	if s.shared.memo != nil {
-		// use memoization: this problem has optimal substructure and
-		// overlapping subproblems, making it a good use for DP
-		if r, ok := s.shared.memo[repr]; ok {
-			if writeMetrics {
-				s.shared.memoHits++
-			}
-			return UnmarshalResult(r)
-		}
+	// use memoization: this problem has optimal substructure and
+	// overlapping subproblems, making it a good use for DP
+	if r, ok := s.shared.getMemo(repr); ok {
+		return r
 	}
 
 	best := s.res
 	for _, e := range s.free.Entries() {
 		if nextFree, ok := s.free.TryPeng(e.Tile); ok {
 			// build the state that results from building a peng with this tile
-			nextPengs := make([]mj.Tile, len(s.res.Pengs)+1)
-
-			copy(nextPengs, s.res.Pengs)
-			nextPengs[len(nextPengs)-1] = e.Tile
-
 			if traceSteps {
 				fmt.Printf("peng: %s x%d\n", e.Tile, e.Count)
 			}
 
 			r := ocstate{Result{
-				Pengs: nextPengs,
+				Pengs: s.res.Pengs.Append(e.Tile),
 				Chis:  s.res.Chis,
 				Pairs: s.res.Pairs,
 			}, nextFree, s.shared}.step() // the recursion
@@ -135,11 +119,6 @@ func (s ocstate) step() Result {
 		}
 
 		if nextFree, ok := s.free.TryPair(e.Tile); ok {
-			nextPairs := make([]mj.Tile, len(s.res.Pairs)+1)
-
-			copy(nextPairs, s.res.Pairs)
-			nextPairs[len(nextPairs)-1] = e.Tile
-
 			if traceSteps {
 				fmt.Printf("pair: %s x%d\n", e.Tile, e.Count)
 			}
@@ -147,7 +126,7 @@ func (s ocstate) step() Result {
 			r := ocstate{Result{
 				Pengs: s.res.Pengs,
 				Chis:  s.res.Chis,
-				Pairs: nextPairs,
+				Pairs: s.res.Pairs.Append(e.Tile),
 			}, nextFree, s.shared}.step()
 
 			if r.score() > best.score() {
@@ -156,18 +135,13 @@ func (s ocstate) step() Result {
 		}
 
 		if nextFree, ok := s.free.TryChi(e.Tile); ok {
-			nextChis := make([]mj.Tile, len(s.res.Chis)+1)
-
-			copy(nextChis, s.res.Chis)
-			nextChis[len(nextChis)-1] = e.Tile
-
 			if traceSteps {
 				fmt.Printf("chi: %s x%d\n", e.Tile, e.Count)
 			}
 
 			r := ocstate{Result{
 				Pengs: s.res.Pengs,
-				Chis:  nextChis,
+				Chis:  s.res.Chis.Append(e.Tile),
 				Pairs: s.res.Pairs,
 			}, nextFree, s.shared}.step()
 
@@ -177,18 +151,6 @@ func (s ocstate) step() Result {
 		}
 	}
 
-	if s.shared.memo != nil {
-		if rOld, ok := s.shared.memo[repr]; ok {
-			// memo should not be updated like this! because the memo result should already be optimal for
-			// the currently free tiles
-			fmt.Printf("updating memo? repr=%x rOld=%+v best=%+v", repr, rOld, best)
-		}
-		// sort the result first
-		result := best.Copy()
-		result.sort()
-
-		s.shared.memo[repr] = result.Marshal()
-	}
-
+	s.shared.setMemo(repr, best)
 	return best
 }

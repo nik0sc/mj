@@ -86,15 +86,10 @@ func (s gstate) step() (Result, bool) {
 	if len(s.h) == 2 {
 		if s.h.IsPair() {
 			// a winner!
-			nextPairs := make([]mj.Tile, len(s.res.Pairs)+1)
-
-			copy(nextPairs, s.res.Pairs)
-			nextPairs[len(nextPairs)-1] = s.h[0]
-
 			r := Result{
 				Pengs: s.res.Pengs,
 				Chis:  s.res.Chis,
-				Pairs: nextPairs,
+				Pairs: s.res.Pairs.Append(s.h[0]),
 				Free:  nil,
 			}
 			return r, true
@@ -104,35 +99,19 @@ func (s gstate) step() (Result, bool) {
 	}
 
 	for i, t := range s.h {
-		hNew := s.h.Remove(i)
-
-		buildNew := make(mj.Hand, len(s.build)+1)
-		copy(buildNew, s.build)
-		buildNew[len(s.build)] = t
-
 		next := gstate{
 			res:    s.res,
-			h:      hNew,
-			build:  buildNew,
+			h:      s.h.Remove(i),
+			build:  s.build.Append(t),
 			shared: s.shared,
 		}
 
 		if len(next.build) == 3 {
 			if next.build.IsPeng() {
-				nextPengs := make([]mj.Tile, len(s.res.Pengs)+1)
-
-				copy(nextPengs, s.res.Pengs)
-				nextPengs[len(nextPengs)-1] = next.build[0]
-
-				next.res.Pengs = nextPengs
+				next.res.Pengs = next.res.Pengs.Append(next.build[0])
 				next.build = nil
 			} else if next.build.IsChi() {
-				nextChis := make([]mj.Tile, len(s.res.Chis)+1)
-
-				copy(nextChis, s.res.Chis)
-				nextChis[len(nextChis)-1] = next.build[0]
-
-				next.res.Chis = nextChis
+				next.res.Chis = next.res.Chis.Append(next.build[0])
 				next.build = nil
 			} else {
 				// Failed build

@@ -7,7 +7,7 @@ import (
 	"github.com/nik0sc/mj"
 )
 
-func Test_handChecker_Check(t *testing.T) {
+func Test_GreedyChecker_Check(t *testing.T) {
 	type args struct {
 		split    bool
 		failfast bool

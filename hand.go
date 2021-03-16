@@ -96,6 +96,14 @@ func (h Hand) Remove(i int) Hand {
 	return hNew
 }
 
+// Append returns a copy of this Hand with the tile appended to the end.
+func (h Hand) Append(t Tile) Hand {
+	hNew := make(Hand, len(h)+1)
+	copy(hNew, h)
+	hNew[len(h)] = t
+	return hNew
+}
+
 // ToCount converts this Hand to a Counter. The result is completely independent
 // of this Hand (i.e. no aliasing).
 func (h Hand) ToCount() Counter {

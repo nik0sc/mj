@@ -34,13 +34,7 @@ type OptChecker struct {
 
 type ostate struct {
 	res    Result
-	shared *oshared
-}
-
-type oshared struct {
-	memo      map[string]string
-	stepCount int
-	memoHits  int
+	shared *shared
 }
 
 // Check finds the optimal grouping for a hand.
@@ -56,7 +50,7 @@ func (c OptChecker) Check(hand mj.Hand) Result {
 		c.cache = make(map[string]Result)
 	}
 	if r, ok := c.cache[hrepr]; ok {
-		return r.Copy()
+		return r.Copy(false)
 	}
 
 	var r Result
@@ -79,12 +73,12 @@ func (c OptChecker) Check(hand mj.Hand) Result {
 		r = c.start(h)
 	}
 
-	c.cache[hrepr] = r
+	c.cache[hrepr] = r.Copy(true)
 	return r
 }
 
 func (c OptChecker) start(h mj.Hand) Result {
-	shared := oshared{}
+	shared := shared{}
 	if c.UseMemo {
 		shared.memo = make(map[string]string)
 	}
@@ -117,15 +111,10 @@ func (s ostate) step() Result {
 	}
 
 	repr := s.res.Free.Marshal()
-	if s.shared.memo != nil {
-		// use memoization: this problem has optimal substructure and
-		// overlapping subproblems, making it a good use for DP
-		if r, ok := s.shared.memo[repr]; ok {
-			if writeMetrics {
-				s.shared.memoHits++
-			}
-			return UnmarshalResult(r)
-		}
+	// use memoization: this problem has optimal substructure and
+	// overlapping subproblems, making it a good use for DP
+	if r, ok := s.shared.getMemo(repr); ok {
+		return r
 	}
 
 	// The best result so far is the one from our parent
@@ -135,13 +124,8 @@ func (s ostate) step() Result {
 		// the hand is always kept in sorted order, this vastly simplifies building
 		if nextFree, ok := s.res.Free.TryPengAt(i); ok {
 			// build the state that results from building a peng with this tile
-			nextPengs := make([]mj.Tile, len(s.res.Pengs)+1)
-
-			copy(nextPengs, s.res.Pengs)
-			nextPengs[len(nextPengs)-1] = t
-
 			r := ostate{Result{
-				Pengs: nextPengs,
+				Pengs: s.res.Pengs.Append(t),
 				Chis:  s.res.Chis,
 				Pairs: s.res.Pairs,
 				Free:  nextFree,
@@ -156,15 +140,10 @@ func (s ostate) step() Result {
 		// A possible optimisation: Try pair first, and only if it succeeds, try peng
 		// Tried it, causes test "all c" to fail on the fast but not on the slow version
 		if nextFree, ok := s.res.Free.TryPairAt(i); ok {
-			nextPairs := make([]mj.Tile, len(s.res.Pairs)+1)
-
-			copy(nextPairs, s.res.Pairs)
-			nextPairs[len(nextPairs)-1] = t
-
 			r := ostate{Result{
 				Pengs: s.res.Pengs,
 				Chis:  s.res.Chis,
-				Pairs: nextPairs,
+				Pairs: s.res.Pairs.Append(t),
 				Free:  nextFree,
 			}, s.shared}.step()
 
@@ -174,14 +153,9 @@ func (s ostate) step() Result {
 		}
 
 		if nextFree, ok := s.res.Free.TryChiAt(i); ok {
-			nextChis := make([]mj.Tile, len(s.res.Chis)+1)
-
-			copy(nextChis, s.res.Chis)
-			nextChis[len(nextChis)-1] = t
-
 			r := ostate{Result{
 				Pengs: s.res.Pengs,
-				Chis:  nextChis,
+				Chis:  s.res.Chis.Append(t),
 				Pairs: s.res.Pairs,
 				Free:  nextFree,
 			}, s.shared}.step()
@@ -192,21 +166,6 @@ func (s ostate) step() Result {
 		}
 	}
 
-	if s.shared.memo != nil {
-		if rOld, ok := s.shared.memo[repr]; ok {
-			// memo should not be updated like this! because the memo result should already be optimal for
-			// the currently free tiles
-			fmt.Printf("updating memo? repr=%x rOld=%+v best=%+v", repr, rOld, best)
-		}
-		// sort the result first
-		result := best.Copy()
-		sort.Sort(mj.Hand(result.Pengs))
-		sort.Sort(mj.Hand(result.Chis))
-		sort.Sort(mj.Hand(result.Pairs))
-		sort.Sort(result.Free)
-
-		s.shared.memo[repr] = result.Marshal()
-	}
-
+	s.shared.setMemo(repr, best)
 	return best
 }

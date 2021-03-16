@@ -7,7 +7,7 @@ import (
 	"github.com/nik0sc/mj"
 )
 
-func Test_optChecker_Check(t *testing.T) {
+func Test_OptChecker_Check(t *testing.T) {
 	tests := []struct {
 		name string
 		hand string
