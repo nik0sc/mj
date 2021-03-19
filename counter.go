@@ -50,6 +50,23 @@ func NewCounter(m map[Tile]int) (Counter, error) {
 	return c, nil
 }
 
+func NewCounterAtStart() Counter {
+	c := Counter{m: make(map[Tile]int, NumUniqueMeldingTiles)}
+
+	// Wildly inefficient lol
+	for i := 0; i < 256; i++ {
+		t := UnmarshalTile(byte(i))
+		if t.CanMeld() {
+			c.m[t] = 4
+			c.n += 4
+		} else if t.Valid() {
+			c.m[t] = 1
+			c.n++
+		}
+	}
+	return c
+}
+
 // Valid returns true if the Counter is valid and all the tiles in the Counter are valid.
 // The zero Counter causes Valid to return false.
 func (c Counter) Valid() bool {
@@ -102,6 +119,14 @@ func (c Counter) Entries() []CountEntry {
 		es = append(es, CountEntry{Tile: t, Count: int16(cnt)})
 	}
 	return es
+}
+
+// ForEach calls f(tile, count) for each tile-count pair.
+// Unlike HandRLE.ForEach(), this doesn't seem to give us significant gains in efficiency.
+func (c Counter) ForEach(f func(t Tile, n int)) {
+	for t, n := range c.m {
+		f(t, n)
+	}
 }
 
 // ToHand converts this Counter to a Hand. If sorted is true, the hand is
@@ -215,7 +240,7 @@ func (c Counter) TryChi(t Tile) (Counter, bool) {
 	return Counter{mNew, nNew}, true
 }
 
-// TryPeng attempts to form a pair with the given tile. If it succeeds, it
+// TryPair attempts to form a pair with the given tile. If it succeeds, it
 // returns (a new Counter with the pair removed, true). Otherwise, it
 // returns (a zero Counter, false).
 //
@@ -227,6 +252,10 @@ func (c Counter) TryPair(t Tile) (Counter, bool) {
 
 // tryMeldRun generalises TryPeng and TryPair.
 func (c Counter) tryMeldRun(t Tile, n int) (Counter, bool) {
+	if !t.CanMeld() {
+		return Counter{}, false
+	}
+
 	if c.m[t] < n {
 		return Counter{}, false
 	} else if c.n == n && c.m[t] == n {

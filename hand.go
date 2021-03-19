@@ -27,10 +27,7 @@ func (h Hand) Len() int {
 
 // See sort.Interface.
 func (h Hand) Less(i, j int) bool {
-	if h[i].Suit != h[j].Suit {
-		return h[i].Suit < h[j].Suit
-	}
-	return h[i].Value < h[j].Value
+	return h[i].Less(h[j])
 }
 
 // See sort.Interface.

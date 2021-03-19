@@ -2,6 +2,7 @@ package handcheck
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -81,7 +82,7 @@ func (r Result) Marshal() string {
 	return b.String()
 }
 
-// Copy deep-copies the Result. The new Result may also be sorted.
+// Copy deep-copies the Result. The new Result's fields may also be sorted.
 func (r Result) Copy(sorted bool) Result {
 	var rNew Result
 
@@ -112,12 +113,13 @@ func (r Result) Copy(sorted bool) Result {
 	return rNew
 }
 
-// score is used to determine the optimality of solutions. It is an
-// implementation detail and calling code should not know about it.
-func (r Result) score() int {
+// Score is used to determine the optimality of solutions. A higher
+// score is better. This only considers the hand and not the context
+// of the surrounding game.
+func (r Result) Score() int {
 	// b1 b1 b1 b1 b1 b1:
-	// - 2 peng: score=8
-	// - 3 pair: score=6
+	// - 2 peng: Score=8
+	// - 3 pair: Score=6
 	// The zero Result has score 0, this is intentional
 	// Effectively, a free tile is worth nothing,
 	// a tile in a pair is worth 1,
@@ -134,6 +136,37 @@ func (r Result) sort() {
 	sort.Sort(r.Free)
 }
 
+// free derives the value of Free by subtracting the formed groups
+// from a map of tiles to counts.
+func (r Result) free(cmap map[mj.Tile]int) (mj.Hand, error) {
+	for _, t := range r.Pengs {
+		cmap[t] -= 3
+	}
+
+	for _, t := range r.Pairs {
+		cmap[t] -= 2
+	}
+
+	for _, t := range r.Chis {
+		t2 := t
+		t2.Value++
+
+		t3 := t
+		t3.Value += 2
+
+		cmap[t]--
+		cmap[t2]--
+		cmap[t3]--
+	}
+
+	freecnt, err := mj.NewCounter(cmap)
+	if err != nil {
+		return nil, errors.New("cannot recreate Counter from map: " + err.Error())
+	}
+	return freecnt.ToHand(true), nil
+}
+
+// UnmarshalResult is the inverse of Result.Marshal().
 func UnmarshalResult(repr string) Result {
 	var r Result
 

@@ -135,7 +135,7 @@ func (s ostate) step() Result {
 			}, s.shared}.step() // the recursion
 
 			// If this state results in an improvement, keep it
-			if r.score() > best.score() {
+			if r.Score() > best.Score() {
 				best = r
 			}
 		}
@@ -150,7 +150,7 @@ func (s ostate) step() Result {
 				Free:  nextFree,
 			}, s.shared}.step()
 
-			if r.score() > best.score() {
+			if r.Score() > best.Score() {
 				best = r
 			}
 		}
@@ -163,7 +163,7 @@ func (s ostate) step() Result {
 				Free:  nextFree,
 			}, s.shared}.step()
 
-			if r.score() > best.score() {
+			if r.Score() > best.Score() {
 				best = r
 			}
 		}

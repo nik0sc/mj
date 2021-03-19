@@ -6,6 +6,7 @@ const (
 	Wan
 	Honour
 	Flower
+	// Only 7 suits can be effectively encoded in the single byte representation.
 )
 
 // Suit is the suit of a Tile. The zero Suit is invalid. There are three basic suits,
@@ -22,12 +23,18 @@ const (
 	Ban
 
 	FlowerBase Value = 32
+	AnimalBase Value = 48
 )
+
+// The number of unique melding tiles in the game.
+const NumUniqueMeldingTiles = 3*9 + 7
+
+const NumTiles = 4*NumUniqueMeldingTiles + 8
 
 // Value is the face value of a Tile, including honours and bonuses. The zero Value is invalid.
 // Values 1-9 inclusive are used for the basic suits. East, South, West, North, Zhong, Fa and Ban
 // are only valid for the Honour suit. Values 32-39 inclusive are only valid for the Flower suit.
-// Value 32 is defined as FlowerBase.
+// Value 32 is defined as FlowerBase. This defines the basic Hong Kong tileset.
 type Value byte
 
 // Tile is a single tile played in mahjong, comprising a Suit and a Value.
@@ -45,6 +52,11 @@ const (
 	uniTileBamboo1 = '🀐'
 	uniTileCoin1   = '🀙'
 	uniTileFlower1 = '🀢'
+	// Extended flower tiles
+	uniTileRooster   = '🐓'
+	uniTileCentipede = '🐛'
+	uniTileCat       = '🐈'
+	uniTileMouse     = '🐁'
 	// used to force emoji style representation
 	uniVS16 rune = 0xfe0f
 	// enable/disable emoji style for all tiles
@@ -137,6 +149,13 @@ func (t Tile) CanMeld() bool {
 // IsBasic returns true if the Tile is a basic tile.
 func (t Tile) IsBasic() bool {
 	return t.Valid() && t.Suit != Flower && t.Suit != Honour
+}
+
+func (t Tile) Less(t2 Tile) bool {
+	if t.Suit != t2.Suit {
+		return t.Suit < t2.Suit
+	}
+	return t.Value < t2.Value
 }
 
 // UnmarshalTile is the inverse of Tile.Marshal().
