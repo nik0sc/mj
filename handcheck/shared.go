@@ -1,6 +1,16 @@
 package handcheck
 
-import "fmt"
+import (
+	"fmt"
+	"io"
+)
+
+const (
+	// Record metrics in shared struct.
+	writeMetrics = true
+	// Trace execution of each step. Very slow.
+	traceSteps = false
+)
 
 type shared struct {
 	memo      map[string]string
@@ -34,4 +44,20 @@ func (s *shared) getMemo(repr string) (Result, bool) {
 		return UnmarshalResult(r), true
 	}
 	return Result{}, false
+}
+
+func (s *shared) enterStep(w io.Writer, at fmt.Stringer) {
+	if writeMetrics {
+		s.stepCount++
+	}
+	if traceSteps {
+		_, _ = fmt.Fprintf(w, "at %s\n", at.String())
+	}
+}
+
+func (s *shared) writeSummary(writer io.Writer) {
+	if writeMetrics {
+		_, _ = fmt.Fprintf(writer, "shared: len(memo)=%d steps=%d memohits=%d\n",
+			len(s.memo), s.stepCount, s.memoHits)
+	}
 }

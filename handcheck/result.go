@@ -10,13 +10,6 @@ import (
 	"github.com/nik0sc/mj"
 )
 
-const (
-	// Record metrics in shared struct.
-	writeMetrics = true
-	// Trace execution of each step. Very slow.
-	traceSteps = false
-)
-
 // Result is the optimal solution found by OptChecker and friends.
 type Result struct {
 	// Each tile represents a meld of 3 identical tiles.

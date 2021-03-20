@@ -2,6 +2,7 @@ package handcheck
 
 import (
 	"fmt"
+	"os"
 	"sort"
 
 	"github.com/nik0sc/mj"
@@ -52,10 +53,7 @@ func (c OptHandRLEChecker) Check(hand mj.Hand) Result {
 	s := ohrstate{Result{}, hr, &shared}
 
 	r := s.step()
-	if writeMetrics {
-		fmt.Printf("shared: len(memo)=%d steps=%d memohits=%d\n",
-			len(s.shared.memo), s.shared.stepCount, s.shared.memoHits)
-	}
+	shared.writeSummary(os.Stdout)
 
 	r.sort()
 
@@ -69,12 +67,7 @@ func (c OptHandRLEChecker) Check(hand mj.Hand) Result {
 }
 
 func (s ohrstate) step() Result {
-	if writeMetrics {
-		s.shared.stepCount++
-	}
-	if traceSteps {
-		fmt.Printf("at %s\n", s.free.String())
-	}
+	s.shared.enterStep(os.Stdout, s.free)
 
 	if s.free.Len() == 0 {
 		return s.res

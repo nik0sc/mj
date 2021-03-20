@@ -1,7 +1,7 @@
 package handcheck
 
 import (
-	"fmt"
+	"os"
 	"sort"
 
 	"github.com/nik0sc/mj"
@@ -89,21 +89,13 @@ func (c OptChecker) start(h mj.Hand) Result {
 	s := ostate{Result{Free: h}, &shared}
 
 	r := s.step()
-	if writeMetrics {
-		fmt.Printf("shared: len(memo)=%d steps=%d memohits=%d\n",
-			len(s.shared.memo), s.shared.stepCount, s.shared.memoHits)
-	}
+	shared.writeSummary(os.Stdout)
 
 	return r
 }
 
 func (s ostate) step() Result {
-	if writeMetrics {
-		s.shared.stepCount++
-	}
-	if traceSteps {
-		fmt.Printf("at %s\n", s.res.Free.String())
-	}
+	s.shared.enterStep(os.Stdout, s.res.Free)
 	// invariant: s.res.Free is always in sorted order
 
 	numFree := len(s.res.Free)
