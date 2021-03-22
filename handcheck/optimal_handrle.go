@@ -81,7 +81,7 @@ func (s ohrstate) step() Result {
 	}
 
 	best := s.res
-	s.free.ForEach(func(i int, e mj.CountEntry) {
+	s.free.ForEach(func(i int, e mj.CountEntry) bool {
 		if nextFree, ok := s.free.TryPengAt(i); ok {
 			// build the state that results from building a peng with this tile
 			if traceSteps {
@@ -131,6 +131,7 @@ func (s ohrstate) step() Result {
 				best = r
 			}
 		}
+		return true
 	})
 
 	s.shared.setMemo(repr, best)

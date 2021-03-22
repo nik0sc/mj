@@ -81,7 +81,7 @@ func (s ocstate) step() Result {
 	}
 
 	best := s.res
-	s.free.ForEach(func(t mj.Tile, n int) {
+	s.free.ForEach(func(t mj.Tile, n int) bool {
 		if nextFree, ok := s.free.TryPeng(t); ok {
 			// build the state that results from building a peng with this tile
 			if traceSteps {
@@ -131,6 +131,7 @@ func (s ocstate) step() Result {
 				best = r
 			}
 		}
+		return true
 	})
 
 	s.shared.setMemo(repr, best)

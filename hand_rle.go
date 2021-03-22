@@ -112,10 +112,13 @@ func (h HandRLE) Entries() []CountEntry {
 
 // ForEach allows iteration over the tile-count pairs without the extra copying of Entries.
 // Using HandRLE.ForEach() instead of ranging over the result of HandRLE.Entries() can save
-// a lot of time and memory.
-func (h HandRLE) ForEach(f func(int, CountEntry)) {
+// a lot of time and memory. The passed-in function should accept an index and a CountEntry
+// and return whether or not to continue the iteration.
+func (h HandRLE) ForEach(f func(int, CountEntry) bool) {
 	for i, e := range h.es {
-		f(i, e)
+		if !f(i, e) {
+			break
+		}
 	}
 }
 

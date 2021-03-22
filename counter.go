@@ -123,9 +123,11 @@ func (c Counter) Entries() []CountEntry {
 
 // ForEach calls f(tile, count) for each tile-count pair.
 // Unlike HandRLE.ForEach(), this doesn't seem to give us significant gains in efficiency.
-func (c Counter) ForEach(f func(t Tile, n int)) {
+func (c Counter) ForEach(f func(t Tile, n int) bool) {
 	for t, n := range c.m {
-		f(t, n)
+		if !f(t, n) {
+			break
+		}
 	}
 }
 
