@@ -11,9 +11,6 @@ import (
 // more expensive. The methods of Counter are guaranteed not to mutate the struct or cause
 // memory aliasing.
 //
-// Counter does not have a Marshal method, since the underlying representation is unordered.
-// Use Counter.ToHand(true).Marshal().
-//
 // You can bypass the methods of Counter by converting to a map[Tile]int with Counter.Map(),
 // modifying the map, and passing it to NewCounter(), which will also verify your map.
 type Counter struct {
@@ -148,6 +145,12 @@ func (c Counter) ToHand(sorted bool) Hand {
 	}
 
 	return h
+}
+
+// Marshal returns a space-efficient encoding of this Counter.
+// It is suitable for comparison, because the output is always sorted in the same order.
+func (c Counter) Marshal() string {
+	return c.ToHand(true).Marshal()
 }
 
 // String returns the human-readable representation of this Counter.

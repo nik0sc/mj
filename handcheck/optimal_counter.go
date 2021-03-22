@@ -73,7 +73,7 @@ func (s ocstate) step() Result {
 		return s.res
 	}
 
-	repr := s.free.ToHand(true).Marshal()
+	repr := s.free.Marshal()
 	// use memoization: this problem has optimal substructure and
 	// overlapping subproblems, making it a good use for DP
 	if r, ok := s.shared.getMemo(repr); ok {

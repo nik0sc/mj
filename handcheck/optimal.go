@@ -98,10 +98,8 @@ func (s ostate) step() Result {
 	s.shared.enterStep(os.Stdout, s.res.Free)
 	// invariant: s.res.Free is always in sorted order
 
-	numFree := len(s.res.Free)
-
 	// base case
-	if numFree == 0 {
+	if len(s.res.Free) == 0 {
 		return s.res
 	}
 
