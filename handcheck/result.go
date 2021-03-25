@@ -22,30 +22,68 @@ type Result struct {
 	Free mj.Hand
 }
 
-// String returns the human-readable representation of this result, in the order
-// Pengs, Chis, Pairs and Free.
-func (r Result) String() string {
-	var ss []string
+func (r Result) ToHand() mj.Hand {
+	var h mj.Hand
 
 	for _, t := range r.Pengs {
-		ss = append(ss, strings.Repeat(t.String(), 3))
+		for i := 0; i < 3; i++ {
+			h = append(h, t)
+		}
 	}
 
 	for _, t := range r.Chis {
-		t2 := t
-		t2.Value++
-		t3 := t2
-		t3.Value++
-		ss = append(ss, t.String()+t2.String()+t3.String())
+		h = append(h, t)
+		t.Value++
+		h = append(h, t)
+		t.Value++
+		h = append(h, t)
 	}
 
 	for _, t := range r.Pairs {
-		ss = append(ss, strings.Repeat(t.String(), 2))
+		for i := 0; i < 2; i++ {
+			h = append(h, t)
+		}
 	}
 
-	ss = append(ss, r.Free.String())
+	h = append(h, r.Free...)
+	return h
+}
 
-	return strings.Join(ss, " ")
+func (r Result) ToCount() mj.Counter {
+	m := make(map[mj.Tile]int)
+
+	for _, t := range r.Pengs {
+		m[t] += 3
+	}
+
+	for _, t := range r.Chis {
+		m[t]++
+		t.Value++
+		m[t]++
+		t.Value++
+		m[t]++
+	}
+
+	for _, t := range r.Pairs {
+		m[t] += 2
+	}
+
+	for _, t := range r.Free {
+		m[t]++
+	}
+
+	cnt, err := mj.NewCounter(m)
+	if err != nil {
+		panic("cannot build counter from result: " + err.Error())
+	}
+
+	return cnt
+}
+
+// String returns the human-readable representation of this result, in the order
+// Pengs, Chis, Pairs and Free.
+func (r Result) String() string {
+	return r.ToHand().String()
 }
 
 // Marshal returns a space-efficient encoding of this result, suitable for comparison

@@ -71,6 +71,14 @@ func (h Hand) Marshal() string {
 	return string(b)
 }
 
+func (h Hand) ForEach(f func(int, Tile) bool) {
+	for i, t := range h {
+		if !f(i, t) {
+			break
+		}
+	}
+}
+
 // Remove returns a copy of this Hand with the tile at index i removed.
 func (h Hand) Remove(i int) Hand {
 	if len(h) == 0 {
