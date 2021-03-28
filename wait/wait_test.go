@@ -1,4 +1,4 @@
-package windist
+package wait
 
 import (
 	"sort"
@@ -8,7 +8,7 @@ import (
 	"github.com/nik0sc/mj/handcheck"
 )
 
-func Test_FindWait(t *testing.T) {
+func Test_Find(t *testing.T) {
 	tests := []struct {
 		name string
 		res  handcheck.Result
@@ -112,7 +112,7 @@ func Test_FindWait(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := FindWait(tt.res)
+			got := Find(tt.res)
 			// sort both
 			goth := mj.Hand(got)
 			wanth := mj.Hand(tt.want)

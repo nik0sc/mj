@@ -8,7 +8,7 @@ import (
 
 	"github.com/nik0sc/mj"
 	"github.com/nik0sc/mj/handcheck"
-	"github.com/nik0sc/mj/windist"
+	"github.com/nik0sc/mj/wait"
 )
 
 func main() {
@@ -32,7 +32,7 @@ func main() {
 	r := handcheck.OptHandRLEChecker{Split: false, UseMemo: true}.Check(h)
 	fmt.Printf("solution: %s\n", r.String())
 
-	wait := windist.FindWait(r)
+	wait := wait.Find(r)
 	if len(wait) == 0 {
 		fmt.Println("no waits")
 	} else {
