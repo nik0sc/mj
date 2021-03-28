@@ -8,6 +8,7 @@ import (
 
 	"github.com/nik0sc/mj"
 	"github.com/nik0sc/mj/handcheck"
+	"github.com/nik0sc/mj/windist"
 )
 
 func main() {
@@ -28,6 +29,13 @@ func main() {
 	sort.Sort(h)
 	fmt.Printf("marshal: %x\n", h.Marshal())
 
-	r := handcheck.OptChecker{Split: false, UseMemo: true}.Check(h)
+	r := handcheck.OptHandRLEChecker{Split: false, UseMemo: true}.Check(h)
 	fmt.Printf("solution: %s\n", r.String())
+
+	wait := windist.FindWait(r)
+	if len(wait) == 0 {
+		fmt.Println("no waits")
+	} else {
+		fmt.Printf("waits: %s\n", mj.Hand(wait).String())
+	}
 }

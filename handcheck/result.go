@@ -10,6 +10,8 @@ import (
 	"github.com/nik0sc/mj"
 )
 
+// TODO: move to top level package, rename to "Grouping" or similar
+
 // Result is the optimal solution found by OptChecker and friends.
 type Result struct {
 	// Each tile represents a meld of 3 identical tiles.
