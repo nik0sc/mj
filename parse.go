@@ -84,3 +84,13 @@ func ParseHand(s string) (h Hand, err error) {
 	}
 	return
 }
+
+// MustParseHand is like ParseHand, but panics if the string cannot be parsed.
+// Useful for testing code, setup, etc.
+func MustParseHand(s string) Hand {
+	h, err := ParseHand(s)
+	if err != nil {
+		panic("mustParseHand: " + err.Error())
+	}
+	return h
+}

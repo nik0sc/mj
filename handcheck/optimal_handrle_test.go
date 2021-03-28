@@ -13,6 +13,7 @@ func Test_OptHandRLEChecker_Check(t *testing.T) {
 		hand string
 		want Result
 	}{
+		// TODO: Rewrite for mj.MustParseHand
 		{
 			"all p",
 			"b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1",

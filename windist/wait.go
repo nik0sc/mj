@@ -8,6 +8,9 @@ import (
 	"github.com/nik0sc/mj/handcheck"
 )
 
+// FindWait takes an input handcheck.Result and determines what tiles
+// the player could wait for to win. Tile counts within the hand are
+// considered, but there is no consideration of discarded tile counts.
 func FindWait(result handcheck.Result) []mj.Tile {
 	meldsets := result.Chis.Len() + result.Pengs.Len()
 	cnt := result.ToCount()
