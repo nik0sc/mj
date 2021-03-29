@@ -20,11 +20,9 @@ type GreedyChecker struct {
 }
 
 type gstate struct {
-	res Group
-
-	h     mj.Hand
-	build mj.Hand
-
+	res    mj.Group
+	h      mj.Hand
+	build  mj.Hand
 	shared *gshared
 }
 
@@ -32,16 +30,16 @@ type gshared struct {
 	stepCount int
 }
 
-func (c GreedyChecker) Check(hand mj.Hand) Group {
+func (c GreedyChecker) Check(hand mj.Hand) mj.Group {
 	h := make(mj.Hand, len(hand))
 	copy(h, hand)
 	sort.Sort(h)
 
-	var r Group
+	var r mj.Group
 	if c.Split {
 		// no need to sort again
 		hsplit := h.Split(false)
-		rs := make([]Group, 0, len(hsplit))
+		rs := make([]mj.Group, 0, len(hsplit))
 		for _, hs := range hsplit {
 			// improvement: could start in goroutines
 			rs = append(rs, c.start(hs))
@@ -60,7 +58,7 @@ func (c GreedyChecker) Check(hand mj.Hand) Group {
 	return r
 }
 
-func (c GreedyChecker) start(h mj.Hand) Group {
+func (c GreedyChecker) start(h mj.Hand) mj.Group {
 	_ = c
 	s := gstate{h: h, shared: &gshared{}}
 
@@ -72,11 +70,11 @@ func (c GreedyChecker) start(h mj.Hand) Group {
 	if ok {
 		return r
 	} else {
-		return Group{Free: h}
+		return mj.Group{Free: h}
 	}
 }
 
-func (s gstate) step() (Group, bool) {
+func (s gstate) step() (mj.Group, bool) {
 	if writeMetrics {
 		s.shared.stepCount++
 	}
@@ -91,7 +89,7 @@ func (s gstate) step() (Group, bool) {
 	if len(s.h) == 2 {
 		if s.h.IsPair() {
 			// a winner!
-			r := Group{
+			r := mj.Group{
 				Pengs: s.res.Pengs,
 				Chis:  s.res.Chis,
 				Pairs: s.res.Pairs.Append(s.h[0]),
@@ -99,7 +97,7 @@ func (s gstate) step() (Group, bool) {
 			}
 			return r, true
 		} else {
-			return Group{}, false
+			return mj.Group{}, false
 		}
 	}
 
@@ -129,5 +127,5 @@ func (s gstate) step() (Group, bool) {
 			return result, ok
 		}
 	}
-	return Group{}, false
+	return mj.Group{}, false
 }

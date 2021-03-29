@@ -1,33 +1,28 @@
-package handcheck
+package mj
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"sort"
 	"strings"
-
-	"github.com/nik0sc/mj"
 )
-
-// TODO: move to top level package, rename to "Grouping" or similar
 
 // Group is an allocation of tiles in a hand to melds.
 type Group struct {
 	// Each tile represents a meld of 3 identical tiles.
-	Pengs mj.Hand
+	Pengs Hand
 	// Each tile is the first of 3 consecutive tiles.
-	Chis mj.Hand
+	Chis Hand
 	// Each tile represents a pair.
-	Pairs mj.Hand
+	Pairs Hand
 	// All the leftover tiles.
-	Free mj.Hand
+	Free Hand
 }
 
 // ToHand expands the Pengs, Chis and Pairs into their full tile sequences and
 // recreates the original Hand.
-func (g Group) ToHand() mj.Hand {
-	var h mj.Hand
+func (g Group) ToHand() Hand {
+	var h Hand
 
 	for _, t := range g.Pengs {
 		for i := 0; i < 3; i++ {
@@ -55,8 +50,8 @@ func (g Group) ToHand() mj.Hand {
 
 // ToCount expands the Pengs, Chis and Pairs into their full tile sequences and
 // returns a Counter of the full hand.
-func (g Group) ToCount() mj.Counter {
-	m := make(map[mj.Tile]int)
+func (g Group) ToCount() Counter {
+	m := make(map[Tile]int)
 
 	for _, t := range g.Pengs {
 		m[t] += 3
@@ -78,7 +73,7 @@ func (g Group) ToCount() mj.Counter {
 		m[t]++
 	}
 
-	cnt, err := mj.NewCounter(m)
+	cnt, err := NewCounter(m)
 	if err != nil {
 		panic("cannot build counter from result: " + err.Error())
 	}
@@ -124,22 +119,22 @@ func (g Group) Copy(sorted bool) Group {
 	var gNew Group
 
 	if g.Pengs != nil {
-		gNew.Pengs = make(mj.Hand, len(g.Pengs))
+		gNew.Pengs = make(Hand, len(g.Pengs))
 		copy(gNew.Pengs, g.Pengs)
 	}
 
 	if g.Chis != nil {
-		gNew.Chis = make(mj.Hand, len(g.Chis))
+		gNew.Chis = make(Hand, len(g.Chis))
 		copy(gNew.Chis, g.Chis)
 	}
 
 	if g.Pairs != nil {
-		gNew.Pairs = make(mj.Hand, len(g.Pairs))
+		gNew.Pairs = make(Hand, len(g.Pairs))
 		copy(gNew.Pairs, g.Pairs)
 	}
 
 	if g.Free != nil {
-		gNew.Free = make(mj.Hand, len(g.Free))
+		gNew.Free = make(Hand, len(g.Free))
 		copy(gNew.Free, g.Free)
 	}
 
@@ -173,36 +168,6 @@ func (g Group) sort() {
 	sort.Sort(g.Free)
 }
 
-// free derives the value of Free by subtracting the formed groups
-// from a map of tiles to counts.
-func (g Group) free(cmap map[mj.Tile]int) (mj.Hand, error) {
-	for _, t := range g.Pengs {
-		cmap[t] -= 3
-	}
-
-	for _, t := range g.Pairs {
-		cmap[t] -= 2
-	}
-
-	for _, t := range g.Chis {
-		t2 := t
-		t2.Value++
-
-		t3 := t
-		t3.Value += 2
-
-		cmap[t]--
-		cmap[t2]--
-		cmap[t3]--
-	}
-
-	freecnt, err := mj.NewCounter(cmap)
-	if err != nil {
-		return nil, errors.New("cannot recreate Counter from map: " + err.Error())
-	}
-	return freecnt.ToHand(true), nil
-}
-
 // UnmarshalGroup is the inverse of Group.Marshal().
 func UnmarshalGroup(repr string) Group {
 	var g Group
@@ -212,10 +177,10 @@ func UnmarshalGroup(repr string) Group {
 		panic(fmt.Sprintf("wrong number of fields: %d", len(reprs)))
 	}
 
-	g.Pengs = mj.UnmarshalHand(reprs[0])
-	g.Chis = mj.UnmarshalHand(reprs[1])
-	g.Pairs = mj.UnmarshalHand(reprs[2])
-	g.Free = mj.UnmarshalHand(reprs[3])
+	g.Pengs = UnmarshalHand(reprs[0])
+	g.Chis = UnmarshalHand(reprs[1])
+	g.Pairs = UnmarshalHand(reprs[2])
+	g.Free = UnmarshalHand(reprs[3])
 
 	return g
 }

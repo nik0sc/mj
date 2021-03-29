@@ -11,12 +11,12 @@ func Test_OptCountChecker_Check(t *testing.T) {
 	tests := []struct {
 		name string
 		hand string
-		want Group
+		want mj.Group
 	}{
 		{
 			"all p",
 			"b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1",
-			Group{
+			mj.Group{
 				Pengs: []mj.Tile{
 					{Suit: mj.Bamboo, Value: 1},
 					{Suit: mj.Bamboo, Value: 1},
@@ -31,7 +31,7 @@ func Test_OptCountChecker_Check(t *testing.T) {
 		{
 			"all c",
 			"b1 b2 b3 b3 b4 b5 b5 b6 b7 b7 b8 b9 b9 b9",
-			Group{
+			mj.Group{
 				Pengs: nil,
 				Chis: []mj.Tile{
 					{Suit: mj.Bamboo, Value: 1},
@@ -46,7 +46,7 @@ func Test_OptCountChecker_Check(t *testing.T) {
 		{
 			"not simple",
 			"w1 b7 w4 c5 b9 he w5 hf w5 c3 b8 hf hn hf",
-			Group{
+			mj.Group{
 				Pengs: []mj.Tile{{Suit: mj.Honour, Value: mj.Fa}},
 				Chis:  []mj.Tile{{Suit: mj.Bamboo, Value: 7}},
 				Pairs: []mj.Tile{{Suit: mj.Wan, Value: 5}},
@@ -63,7 +63,7 @@ func Test_OptCountChecker_Check(t *testing.T) {
 		{
 			"not simple either",
 			"c1 c2 c3 c3 c3 c4 c5 c6",
-			Group{
+			mj.Group{
 				Pengs: nil,
 				Chis: []mj.Tile{
 					{Suit: mj.Coin, Value: 1},
@@ -76,7 +76,7 @@ func Test_OptCountChecker_Check(t *testing.T) {
 		{
 			"not simple 2",
 			"c1 c1 c1 c2 c3 c4 c5 c6",
-			Group{
+			mj.Group{
 				Pengs: nil,
 				Chis: []mj.Tile{
 					{Suit: mj.Coin, Value: 1},
@@ -89,7 +89,7 @@ func Test_OptCountChecker_Check(t *testing.T) {
 		{
 			"degen",
 			"b1 b3 b5 b7 b9 c1 c3 c5 c7 c9 w1 w3 w5 w7",
-			Group{
+			mj.Group{
 				Pengs: nil,
 				Chis:  nil,
 				Pairs: nil,
@@ -114,7 +114,7 @@ func Test_OptCountChecker_Check(t *testing.T) {
 		{
 			"pairs or chis",
 			"b1 b2 b3 b1 b2 b3",
-			Group{
+			mj.Group{
 				Pengs: nil,
 				Chis: []mj.Tile{
 					{Suit: mj.Bamboo, Value: 1},

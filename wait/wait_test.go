@@ -5,23 +5,22 @@ import (
 	"testing"
 
 	"github.com/nik0sc/mj"
-	"github.com/nik0sc/mj/handcheck"
 )
 
 func Test_Find(t *testing.T) {
 	tests := []struct {
 		name string
-		res  handcheck.Group
+		res  mj.Group
 		want []mj.Tile
 	}{
 		{
 			"empty",
-			handcheck.Group{},
+			mj.Group{},
 			[]mj.Tile{},
 		},
 		{
 			"peng",
-			handcheck.Group{
+			mj.Group{
 				Pengs: mj.MustParseHand("b1 b2 b3"),
 				Pairs: mj.MustParseHand("b4 b5"),
 			},
@@ -29,7 +28,7 @@ func Test_Find(t *testing.T) {
 		},
 		{
 			"peng impossible",
-			handcheck.Group{
+			mj.Group{
 				// b1 b2 b3 b3 b4 b5 b3 b4 b5
 				Chis: mj.MustParseHand("b1 b3 b3"),
 				// b4 b4 b5 b5
@@ -44,7 +43,7 @@ func Test_Find(t *testing.T) {
 		},
 		{
 			"chi",
-			handcheck.Group{
+			mj.Group{
 				// b1 b2 b3 b2 b3 b4 b3 b4 b5
 				Chis: mj.MustParseHand("b1 b2 b3"),
 				// b5 b5
@@ -56,7 +55,7 @@ func Test_Find(t *testing.T) {
 		},
 		{
 			"chi high",
-			handcheck.Group{
+			mj.Group{
 				Pengs: mj.MustParseHand("b1 b2 b3"),
 				Pairs: mj.MustParseHand("b5"),
 				Free:  mj.MustParseHand("b8 b9"),
@@ -65,7 +64,7 @@ func Test_Find(t *testing.T) {
 		},
 		{
 			"chi low",
-			handcheck.Group{
+			mj.Group{
 				Pengs: mj.MustParseHand("b7 b8 b9"),
 				Pairs: mj.MustParseHand("b5"),
 				Free:  mj.MustParseHand("b1 b2"),
@@ -74,7 +73,7 @@ func Test_Find(t *testing.T) {
 		},
 		{
 			"chi impossible",
-			handcheck.Group{
+			mj.Group{
 				Chis:  mj.MustParseHand("b3 b3 b4"),
 				Pairs: mj.MustParseHand("b3"),
 				Free:  mj.MustParseHand("b1 b2"),
@@ -84,7 +83,7 @@ func Test_Find(t *testing.T) {
 		},
 		{
 			"chi middle",
-			handcheck.Group{
+			mj.Group{
 				Pengs: mj.MustParseHand("b2 b3 b7"),
 				Pairs: mj.MustParseHand("b1"),
 				Free:  mj.MustParseHand("b4 b6"),
@@ -93,7 +92,7 @@ func Test_Find(t *testing.T) {
 		},
 		{
 			"chi wrong suit 1",
-			handcheck.Group{
+			mj.Group{
 				Chis:  mj.MustParseHand("b1 b2 b3"),
 				Pairs: mj.MustParseHand("b5"),
 				Free:  mj.MustParseHand("b7 c8"),
@@ -102,7 +101,7 @@ func Test_Find(t *testing.T) {
 		},
 		{
 			"chi wrong suit 2",
-			handcheck.Group{
+			mj.Group{
 				Chis:  mj.MustParseHand("b1 b2 b3"),
 				Pairs: mj.MustParseHand("b5"),
 				Free:  mj.MustParseHand("hz hf"),
@@ -111,7 +110,7 @@ func Test_Find(t *testing.T) {
 		},
 		{
 			"chi too far",
-			handcheck.Group{
+			mj.Group{
 				Chis:  mj.MustParseHand("b1 b2 b3"),
 				Pairs: mj.MustParseHand("b5"),
 				Free:  mj.MustParseHand("b6 b9"),
@@ -120,7 +119,7 @@ func Test_Find(t *testing.T) {
 		},
 		{
 			"pair",
-			handcheck.Group{
+			mj.Group{
 				Pengs: mj.MustParseHand("b2 b3 b4 b5"),
 				Free:  mj.MustParseHand("b1"),
 			},
@@ -128,7 +127,7 @@ func Test_Find(t *testing.T) {
 		},
 		{
 			"pair impossible",
-			handcheck.Group{
+			mj.Group{
 				Pengs: mj.MustParseHand("b1 b2 b3 b4"),
 				Free:  mj.MustParseHand("b1"),
 				// b1:4 b2:3 b3:3 b4:3

@@ -21,7 +21,7 @@ type OptChecker struct {
 	// If OptChecker is reused for multiple hands (perhaps in a mahjong-playing AI agent),
 	// we can cache the results.
 	// TODO: Need some kind of cache eviction policy in that case.
-	cache map[string]Group
+	cache map[string]mj.Group
 
 	// optimisations
 
@@ -36,12 +36,12 @@ type OptChecker struct {
 }
 
 type ostate struct {
-	res    Group
+	res    mj.Group
 	shared *shared
 }
 
 // Check finds the optimal grouping for a hand.
-func (c OptChecker) Check(hand mj.Hand) Group {
+func (c OptChecker) Check(hand mj.Hand) mj.Group {
 	h := make(mj.Hand, len(hand))
 	copy(h, hand)
 	// very important, when we search for melds we depend on sorted order
@@ -50,17 +50,17 @@ func (c OptChecker) Check(hand mj.Hand) Group {
 	// did we solve this hand before?
 	hrepr := h.Marshal()
 	if c.cache == nil {
-		c.cache = make(map[string]Group)
+		c.cache = make(map[string]mj.Group)
 	}
 	if r, ok := c.cache[hrepr]; ok {
 		return r.Copy(false)
 	}
 
-	var r Group
+	var r mj.Group
 	if c.Split {
 		// no need to sort again
 		hsplit := h.Split(false)
-		rs := make([]Group, 0, len(hsplit))
+		rs := make([]mj.Group, 0, len(hsplit))
 		for _, hs := range hsplit {
 			// improvement: could start in goroutines
 			rs = append(rs, c.start(hs))
@@ -80,13 +80,13 @@ func (c OptChecker) Check(hand mj.Hand) Group {
 	return r
 }
 
-func (c OptChecker) start(h mj.Hand) Group {
+func (c OptChecker) start(h mj.Hand) mj.Group {
 	shr := shared{}
 	if c.UseMemo {
 		shr.memo = make(map[string]string)
 	}
 	// at first, the entire hand is free
-	s := ostate{Group{Free: h}, &shr}
+	s := ostate{mj.Group{Free: h}, &shr}
 
 	r := s.step()
 	shr.writeSummary(os.Stdout)
@@ -94,7 +94,7 @@ func (c OptChecker) start(h mj.Hand) Group {
 	return r
 }
 
-func (s ostate) step() Group {
+func (s ostate) step() mj.Group {
 	s.shared.enterStep(os.Stdout, s.res.Free)
 	// invariant: s.res.Free is always in sorted order
 
@@ -117,7 +117,7 @@ func (s ostate) step() Group {
 		// the hand is always kept in sorted order, this vastly simplifies building
 		if nextFree, ok := s.res.Free.TryPengAt(i); ok {
 			// build the state that results from building a peng with this tile
-			r := ostate{Group{
+			r := ostate{mj.Group{
 				Pengs: s.res.Pengs.Append(t),
 				Chis:  s.res.Chis,
 				Pairs: s.res.Pairs,
@@ -133,7 +133,7 @@ func (s ostate) step() Group {
 		// A possible optimisation: Try pair first, and only if it succeeds, try peng
 		// Tried it, causes test "all c" to fail on the fast but not on the slow version
 		if nextFree, ok := s.res.Free.TryPairAt(i); ok {
-			r := ostate{Group{
+			r := ostate{mj.Group{
 				Pengs: s.res.Pengs,
 				Chis:  s.res.Chis,
 				Pairs: s.res.Pairs.Append(t),
@@ -146,7 +146,7 @@ func (s ostate) step() Group {
 		}
 
 		if nextFree, ok := s.res.Free.TryChiAt(i); ok {
-			r := ostate{Group{
+			r := ostate{mj.Group{
 				Pengs: s.res.Pengs,
 				Chis:  s.res.Chis.Append(t),
 				Pairs: s.res.Pairs,

@@ -36,7 +36,7 @@ func optCheckSync(hand string, split bool, memo bool) string {
 }
 
 type checker interface {
-	Check(hand mj.Hand) handcheck.Group
+	Check(hand mj.Hand) mj.Group
 }
 
 func main() {

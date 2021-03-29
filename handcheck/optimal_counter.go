@@ -33,13 +33,13 @@ type OptCountChecker struct {
 type ocstate struct {
 	// Unlike OptChecker, the result always has a nil Free field, because
 	// the ocstate.free field already has that information.
-	res    Group
+	res    mj.Group
 	free   mj.Counter
 	shared *shared
 }
 
 // Check finds the optimal grouping for a hand.
-func (c OptCountChecker) Check(hand mj.Hand) Group {
+func (c OptCountChecker) Check(hand mj.Hand) mj.Group {
 	h := make(mj.Hand, len(hand))
 	copy(h, hand)
 	sort.Sort(h)
@@ -49,16 +49,12 @@ func (c OptCountChecker) Check(hand mj.Hand) Group {
 		shr.memo = make(map[string]string)
 	}
 	cnt := h.ToCount()
-	s := ocstate{Group{}, cnt, &shr}
+	s := ocstate{mj.Group{}, cnt, &shr}
 
 	r := s.step()
 	shr.writeSummary(os.Stdout)
 
-	r.sort()
-
-	// Reconstruct the free tiles
-	var err error
-	r.Free, err = r.free(cnt.Map())
+	err := postprocessCountGroup(&r, cnt.Map())
 	if err != nil {
 		panic(err)
 	}
@@ -66,7 +62,7 @@ func (c OptCountChecker) Check(hand mj.Hand) Group {
 	return r
 }
 
-func (s ocstate) step() Group {
+func (s ocstate) step() mj.Group {
 	s.shared.enterStep(os.Stdout, s.free)
 
 	if s.free.Len() == 0 {
@@ -88,7 +84,7 @@ func (s ocstate) step() Group {
 				fmt.Printf("peng: %s x%d\n", t, n)
 			}
 
-			r := ocstate{Group{
+			r := ocstate{mj.Group{
 				Pengs: s.res.Pengs.Append(t),
 				Chis:  s.res.Chis,
 				Pairs: s.res.Pairs,
@@ -105,7 +101,7 @@ func (s ocstate) step() Group {
 				fmt.Printf("pair: %s x%d\n", t, n)
 			}
 
-			r := ocstate{Group{
+			r := ocstate{mj.Group{
 				Pengs: s.res.Pengs,
 				Chis:  s.res.Chis,
 				Pairs: s.res.Pairs.Append(t),
@@ -121,7 +117,7 @@ func (s ocstate) step() Group {
 				fmt.Printf("chi: %s x%d\n", t, n)
 			}
 
-			r := ocstate{Group{
+			r := ocstate{mj.Group{
 				Pengs: s.res.Pengs,
 				Chis:  s.res.Chis.Append(t),
 				Pairs: s.res.Pairs,

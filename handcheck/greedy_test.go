@@ -16,13 +16,13 @@ func Test_GreedyChecker_Check(t *testing.T) {
 		name string
 		hand string
 		args args
-		want Group
+		want mj.Group
 	}{
 		{
 			name: "all p",
 			hand: "b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1",
 			args: args{false, false},
-			want: Group{
+			want: mj.Group{
 				Pengs: []mj.Tile{
 					{Suit: mj.Bamboo, Value: 1},
 					{Suit: mj.Bamboo, Value: 1},
@@ -38,7 +38,7 @@ func Test_GreedyChecker_Check(t *testing.T) {
 			"all c",
 			"b1 b2 b3 b3 b4 b5 b5 b6 b7 b7 b8 b9 b9 b9",
 			args{false, false},
-			Group{
+			mj.Group{
 				Pengs: nil,
 				Chis: []mj.Tile{
 					{Suit: mj.Bamboo, Value: 1},
@@ -54,19 +54,19 @@ func Test_GreedyChecker_Check(t *testing.T) {
 			"not simple",
 			"w1 b7 w4 c5 b9 he w5 hf w5 c3 b8 hf hn hf",
 			args{true, true},
-			Group{},
+			mj.Group{},
 		},
 		{
 			"not simple, full result",
 			"w1 b7 w4 c5 b9 he w5 hf w5 c3 b8 hf hn hf",
 			args{false, false},
-			Group{},
+			mj.Group{},
 		},
 		{
 			"not simple either",
 			"c1 c2 c3 c3 c3 c4 c5 c6",
 			args{false, false},
-			Group{
+			mj.Group{
 				Pengs: nil,
 				Chis: []mj.Tile{
 					{Suit: mj.Coin, Value: 1},
@@ -80,7 +80,7 @@ func Test_GreedyChecker_Check(t *testing.T) {
 			"not simple 2",
 			"c1 c1 c1 c2 c3 c4 c5 c6",
 			args{false, false},
-			Group{
+			mj.Group{
 				Pengs: nil,
 				Chis: []mj.Tile{
 					{Suit: mj.Coin, Value: 1},
@@ -94,7 +94,7 @@ func Test_GreedyChecker_Check(t *testing.T) {
 			"degen",
 			"b1 b3 b5 b7 b9 c1 c3 c5 c7 c9 w1 w3 w5 w7",
 			args{false, false},
-			Group{},
+			mj.Group{},
 		},
 	}
 	for _, tt := range tests {

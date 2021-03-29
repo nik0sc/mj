@@ -29,13 +29,13 @@ type OptHandRLEChecker struct {
 }
 
 type ohrstate struct {
-	res    Group
+	res    mj.Group
 	free   mj.HandRLE
 	shared *shared
 }
 
 // Check finds the optimal grouping for a hand.
-func (c OptHandRLEChecker) Check(hand mj.Hand) Group {
+func (c OptHandRLEChecker) Check(hand mj.Hand) mj.Group {
 	h := make(mj.Hand, len(hand))
 	copy(h, hand)
 	sort.Sort(h)
@@ -50,15 +50,12 @@ func (c OptHandRLEChecker) Check(hand mj.Hand) Group {
 	if err != nil {
 		panic("Counter and HandRLE don't agree on entries: " + err.Error())
 	}
-	s := ohrstate{Group{}, hr, &shr}
+	s := ohrstate{mj.Group{}, hr, &shr}
 
 	r := s.step()
 	shr.writeSummary(os.Stdout)
 
-	r.sort()
-
-	// Reconstruct the free tiles
-	r.Free, err = r.free(cnt.Map())
+	err = postprocessCountGroup(&r, cnt.Map())
 	if err != nil {
 		panic(err)
 	}
@@ -66,7 +63,7 @@ func (c OptHandRLEChecker) Check(hand mj.Hand) Group {
 	return r
 }
 
-func (s ohrstate) step() Group {
+func (s ohrstate) step() mj.Group {
 	s.shared.enterStep(os.Stdout, s.free)
 
 	if s.free.Len() == 0 {
@@ -88,7 +85,7 @@ func (s ohrstate) step() Group {
 				fmt.Printf("peng: %s x%d\n", e.Tile, e.Count)
 			}
 
-			r := ohrstate{Group{
+			r := ohrstate{mj.Group{
 				Pengs: s.res.Pengs.Append(e.Tile),
 				Chis:  s.res.Chis,
 				Pairs: s.res.Pairs,
@@ -105,7 +102,7 @@ func (s ohrstate) step() Group {
 				fmt.Printf("pair: %s x%d\n", e.Tile, e.Count)
 			}
 
-			r := ohrstate{Group{
+			r := ohrstate{mj.Group{
 				Pengs: s.res.Pengs,
 				Chis:  s.res.Chis,
 				Pairs: s.res.Pairs.Append(e.Tile),
@@ -121,7 +118,7 @@ func (s ohrstate) step() Group {
 				fmt.Printf("chi: %s x%d\n", e.Tile, e.Count)
 			}
 
-			r := ohrstate{Group{
+			r := ohrstate{mj.Group{
 				Pengs: s.res.Pengs,
 				Chis:  s.res.Chis.Append(e.Tile),
 				Pairs: s.res.Pairs,
