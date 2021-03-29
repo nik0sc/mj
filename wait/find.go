@@ -7,7 +7,7 @@ import (
 	"github.com/nik0sc/mj"
 )
 
-// Find takes an input handcheck.Group and determines what tiles
+// Find takes an input mj.Group and determines what tiles
 // the player could wait for to win. Tile counts within the hand are
 // considered, but there is no consideration of discarded tile counts.
 func Find(result mj.Group) []mj.Tile {
