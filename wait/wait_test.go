@@ -92,6 +92,33 @@ func Test_Find(t *testing.T) {
 			mj.MustParseHand("b5"),
 		},
 		{
+			"chi wrong suit 1",
+			handcheck.Result{
+				Chis:  mj.MustParseHand("b1 b2 b3"),
+				Pairs: mj.MustParseHand("b5"),
+				Free:  mj.MustParseHand("b7 c8"),
+			},
+			[]mj.Tile{},
+		},
+		{
+			"chi wrong suit 2",
+			handcheck.Result{
+				Chis:  mj.MustParseHand("b1 b2 b3"),
+				Pairs: mj.MustParseHand("b5"),
+				Free:  mj.MustParseHand("hz hf"),
+			},
+			[]mj.Tile{},
+		},
+		{
+			"chi too far",
+			handcheck.Result{
+				Chis:  mj.MustParseHand("b1 b2 b3"),
+				Pairs: mj.MustParseHand("b5"),
+				Free:  mj.MustParseHand("b6 b9"),
+			},
+			[]mj.Tile{},
+		},
+		{
 			"pair",
 			handcheck.Result{
 				Pengs: mj.MustParseHand("b2 b3 b4 b5"),
