@@ -17,7 +17,7 @@ import (
 //
 // Under the hood, this uses mj.HandRLE to represent the free tiles at each subproblem.
 type OptHandRLEChecker struct {
-	// cache map[string]Result
+	// cache map[string]Group
 
 	// optimisations
 
@@ -29,20 +29,20 @@ type OptHandRLEChecker struct {
 }
 
 type ohrstate struct {
-	res    Result
+	res    Group
 	free   mj.HandRLE
 	shared *shared
 }
 
 // Check finds the optimal grouping for a hand.
-func (c OptHandRLEChecker) Check(hand mj.Hand) Result {
+func (c OptHandRLEChecker) Check(hand mj.Hand) Group {
 	h := make(mj.Hand, len(hand))
 	copy(h, hand)
 	sort.Sort(h)
 
-	shared := shared{}
+	shr := shared{}
 	if c.UseMemo {
-		shared.memo = make(map[string]string)
+		shr.memo = make(map[string]string)
 	}
 	// This will be useful later for recreating the free tiles
 	cnt := h.ToCount()
@@ -50,10 +50,10 @@ func (c OptHandRLEChecker) Check(hand mj.Hand) Result {
 	if err != nil {
 		panic("Counter and HandRLE don't agree on entries: " + err.Error())
 	}
-	s := ohrstate{Result{}, hr, &shared}
+	s := ohrstate{Group{}, hr, &shr}
 
 	r := s.step()
-	shared.writeSummary(os.Stdout)
+	shr.writeSummary(os.Stdout)
 
 	r.sort()
 
@@ -66,7 +66,7 @@ func (c OptHandRLEChecker) Check(hand mj.Hand) Result {
 	return r
 }
 
-func (s ohrstate) step() Result {
+func (s ohrstate) step() Group {
 	s.shared.enterStep(os.Stdout, s.free)
 
 	if s.free.Len() == 0 {
@@ -88,7 +88,7 @@ func (s ohrstate) step() Result {
 				fmt.Printf("peng: %s x%d\n", e.Tile, e.Count)
 			}
 
-			r := ohrstate{Result{
+			r := ohrstate{Group{
 				Pengs: s.res.Pengs.Append(e.Tile),
 				Chis:  s.res.Chis,
 				Pairs: s.res.Pairs,
@@ -105,7 +105,7 @@ func (s ohrstate) step() Result {
 				fmt.Printf("pair: %s x%d\n", e.Tile, e.Count)
 			}
 
-			r := ohrstate{Result{
+			r := ohrstate{Group{
 				Pengs: s.res.Pengs,
 				Chis:  s.res.Chis,
 				Pairs: s.res.Pairs.Append(e.Tile),
@@ -121,7 +121,7 @@ func (s ohrstate) step() Result {
 				fmt.Printf("chi: %s x%d\n", e.Tile, e.Count)
 			}
 
-			r := ohrstate{Result{
+			r := ohrstate{Group{
 				Pengs: s.res.Pengs,
 				Chis:  s.res.Chis.Append(e.Tile),
 				Pairs: s.res.Pairs,

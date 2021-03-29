@@ -18,32 +18,32 @@ type shared struct {
 	memoHits  int
 }
 
-func (s *shared) setMemo(repr string, r Result) {
+func (s *shared) setMemo(repr string, g Group) {
 	if s.memo == nil {
 		return
 	}
 	if rOld, ok := s.memo[repr]; ok {
 		// memo should not be updated like this! because the memo result should already be optimal for
 		// the currently free tiles
-		panic(fmt.Sprintf("updating memo: repr=%x rOld=%+v r=%+v", repr, rOld, r))
+		panic(fmt.Sprintf("updating memo: repr=%x rOld=%+v g=%+v", repr, rOld, g))
 	}
 	// sort the result first
-	store := r.Copy(true)
+	store := g.Copy(true)
 
 	s.memo[repr] = store.Marshal()
 }
 
-func (s *shared) getMemo(repr string) (Result, bool) {
+func (s *shared) getMemo(repr string) (Group, bool) {
 	//if s.memo == nil {
-	//	return Result{}, false
+	//	return Group{}, false
 	//}
-	if r, ok := s.memo[repr]; ok {
+	if g, ok := s.memo[repr]; ok {
 		if writeMetrics {
 			s.memoHits++
 		}
-		return UnmarshalResult(r), true
+		return UnmarshalGroup(g), true
 	}
-	return Result{}, false
+	return Group{}, false
 }
 
 func (s *shared) enterStep(w io.Writer, at fmt.Stringer) {

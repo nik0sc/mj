@@ -19,7 +19,7 @@ import (
 // While this reduces the branching factor, it actually has higher runtime and memory
 // usage in average cases.
 type OptCountChecker struct {
-	// cache map[string]Result
+	// cache map[string]Group
 
 	// optimisations
 
@@ -33,26 +33,26 @@ type OptCountChecker struct {
 type ocstate struct {
 	// Unlike OptChecker, the result always has a nil Free field, because
 	// the ocstate.free field already has that information.
-	res    Result
+	res    Group
 	free   mj.Counter
 	shared *shared
 }
 
 // Check finds the optimal grouping for a hand.
-func (c OptCountChecker) Check(hand mj.Hand) Result {
+func (c OptCountChecker) Check(hand mj.Hand) Group {
 	h := make(mj.Hand, len(hand))
 	copy(h, hand)
 	sort.Sort(h)
 
-	shared := shared{}
+	shr := shared{}
 	if c.UseMemo {
-		shared.memo = make(map[string]string)
+		shr.memo = make(map[string]string)
 	}
 	cnt := h.ToCount()
-	s := ocstate{Result{}, cnt, &shared}
+	s := ocstate{Group{}, cnt, &shr}
 
 	r := s.step()
-	shared.writeSummary(os.Stdout)
+	shr.writeSummary(os.Stdout)
 
 	r.sort()
 
@@ -66,7 +66,7 @@ func (c OptCountChecker) Check(hand mj.Hand) Result {
 	return r
 }
 
-func (s ocstate) step() Result {
+func (s ocstate) step() Group {
 	s.shared.enterStep(os.Stdout, s.free)
 
 	if s.free.Len() == 0 {
@@ -88,7 +88,7 @@ func (s ocstate) step() Result {
 				fmt.Printf("peng: %s x%d\n", t, n)
 			}
 
-			r := ocstate{Result{
+			r := ocstate{Group{
 				Pengs: s.res.Pengs.Append(t),
 				Chis:  s.res.Chis,
 				Pairs: s.res.Pairs,
@@ -105,7 +105,7 @@ func (s ocstate) step() Result {
 				fmt.Printf("pair: %s x%d\n", t, n)
 			}
 
-			r := ocstate{Result{
+			r := ocstate{Group{
 				Pengs: s.res.Pengs,
 				Chis:  s.res.Chis,
 				Pairs: s.res.Pairs.Append(t),
@@ -121,7 +121,7 @@ func (s ocstate) step() Result {
 				fmt.Printf("chi: %s x%d\n", t, n)
 			}
 
-			r := ocstate{Result{
+			r := ocstate{Group{
 				Pengs: s.res.Pengs,
 				Chis:  s.res.Chis.Append(t),
 				Pairs: s.res.Pairs,
