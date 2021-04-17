@@ -11,7 +11,7 @@ import (
 // it stores tiles and their counts.
 //
 // Unfortunately, the public API is also a weird mix of Hand and Counter.
-// Note: tile lookup still requires linear search.
+// Tile lookup now uses binary search, since the tile-count pairs are stored in order.
 type HandRLE struct {
 	es []CountEntry
 	n  int
@@ -92,11 +92,17 @@ func (h HandRLE) Len() int {
 
 // Get returns the count of a tile.
 func (h HandRLE) Get(t Tile) int {
-	// This requires linear search. If the tiles are always sorted, we could improve this
-	// with some kind of binary search.
-	for _, e := range h.es {
-		if e.Tile == t {
-			return int(e.Count)
+	sl := h.es
+
+	// Obviously, this only works if HandRLE is always sorted (which it is)
+	for len(sl) > 0 {
+		i := len(sl) / 2
+		if sl[i].Tile == t {
+			return int(sl[i].Count)
+		} else if t.Less(sl[i].Tile) {
+			sl = sl[:i]
+		} else {
+			sl = sl[i+1:]
 		}
 	}
 
