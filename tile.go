@@ -61,13 +61,13 @@ const (
 	uniVS16 rune = 0xfe0f
 	// enable/disable emoji style for all tiles
 	// (this seems to work on Windows renderers and nowhere else)
-	uniUseVS16 = true
+	uniUseVS16 = false
 )
 
 // Valid returns true if the Tile data is valid and may be used in the algorithms.
 func (t Tile) Valid() bool {
 	if t.Suit == 0 || t.Value == 0 {
-		return true
+		return false
 	}
 
 	switch t.Suit {
@@ -149,6 +149,11 @@ func (t Tile) CanMeld() bool {
 // IsBasic returns true if the Tile is a basic tile.
 func (t Tile) IsBasic() bool {
 	return t.Valid() && t.Suit != Flower && t.Suit != Honour
+}
+
+// IsTerminal returns true if the Tile is a basic tile and the value is 1 or 9.
+func (t Tile) IsTerminal() bool {
+	return t.IsBasic() && (t.Value == 1 || t.Value == 9)
 }
 
 func (t Tile) Less(t2 Tile) bool {
