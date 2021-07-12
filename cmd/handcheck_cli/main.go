@@ -32,7 +32,7 @@ func main() {
 	r := handcheck.OptHandRLEChecker{Split: false, UseMemo: true}.Check(h)
 	fmt.Printf("solution: %s\n", r.String())
 
-	waits := wait.Find(r)
+	waits := wait.Find(r, true)
 	if len(waits) == 0 {
 		fmt.Println("no waits")
 	} else {

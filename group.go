@@ -156,6 +156,16 @@ func (g Group) Score() int {
 	// Effectively, a free tile is worth nothing,
 	// a tile in a pair is worth 1,
 	// and a tile in a peng/chi is worth 1.333...
+
+	// A winning hand (including the 14th tile) when grouped has a score of 18.
+	// If waiting to complete a pair, the score is 4*4 = 16.
+	// If waiting to complete a peng, the score is 4*3 + 2*2 = also 16.
+	// If waiting to complete a chi, the score is 4*3 + 2*1 = 14.
+	//
+	// 7 pairs has a lower score than a winning hand, and 6 pairs has a lower score than
+	// any waiting hand. This may be fixed in a future scoring algorithm.
+	// Maybe some non-linearity in the growth of the score's pair portion?
+
 	return 4*len(g.Pengs) + 4*len(g.Chis) + 2*len(g.Pairs)
 	// a good compiler would turn that into left shifts and adds
 }

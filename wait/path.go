@@ -1,11 +1,10 @@
-package win
+package wait
 
 import (
 	"errors"
 
 	"github.com/nik0sc/mj"
 	"github.com/nik0sc/mj/handcheck"
-	"github.com/nik0sc/mj/wait"
 )
 
 const (
@@ -26,19 +25,19 @@ type EditSequence []Edit
 //
 // If `depth` > 0, at most `depth` number of edits is allowed (ie. limits
 // search depth).
-func FindPath(h mj.Hand, available mj.Counter, depth int) (EditSequence, []mj.Tile, error) {
+func FindPath(h mj.Hand, avail mj.Counter, depth int) (edits EditSequence, waits []mj.Tile, err error) {
 	if h.Len() != NumTilesInHand {
 		return nil, nil, errors.New("not enough tiles")
 	}
 
-	if !h.Valid() || !available.Valid() {
+	if !h.Valid() || !avail.Valid() {
 		return nil, nil, errors.New("failed validation")
 	}
 
 	c := handcheck.OptHandRLEChecker{UseMemo: true}
 	group := c.Check(h)
 
-	waits := wait.Find(group)
+	waits = Find(group, true)
 	if waits != nil {
 		return nil, waits, nil
 	}

@@ -10,7 +10,12 @@ import (
 // Find takes an input mj.Group and determines what tiles
 // the player could wait for to win. Tile counts within the hand are
 // considered, but there is no consideration of discarded tile counts.
-func Find(result mj.Group) []mj.Tile {
+// Find will not propose waits for special hands like thirteen orphans, all
+// pairs, etc.
+//
+// If allowMiddle is false, the middle tile of a chi will not be proposed. This
+// is useful for excluding middle tiles in some pinghu situations.
+func Find(result mj.Group, allowMiddle bool) []mj.Tile {
 	meldsets := result.Chis.Len() + result.Pengs.Len()
 	cnt := result.ToCount()
 	var waits []mj.Tile
@@ -60,8 +65,8 @@ func Find(result mj.Group) []mj.Tile {
 				}
 			}
 			return waits
-		} else if result.Free[0].Value+2 == result.Free[1].Value {
-			// check middle
+		} else if result.Free[0].Value+2 == result.Free[1].Value && allowMiddle {
+			// check middle if requested
 			t := result.Free[0]
 			t.Value++
 			if !t.Valid() {
