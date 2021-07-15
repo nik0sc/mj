@@ -50,6 +50,12 @@ func TestIsThirteenOrphans(t *testing.T) {
 			false,
 			mj.Tile{},
 		},
+		{
+			"Short 1",
+			mj.Hand{},
+			false,
+			mj.Tile{},
+		},
 	}
 
 	for _, tt := range tests {
