@@ -20,6 +20,6 @@ jobs:
           args: tinygo build -o=assets_tinygo/handcheck.wasm -target=wasm -no-debug cmd/handcheck_wasm_tinygo/handcheck.go
       - uses: actions/upload-artifact@v2
         with:
-          name: Assets for tinygo js/wasm
+          name: Assets for wasm
           path: assets_tinygo/
           if-no-files-found: error
