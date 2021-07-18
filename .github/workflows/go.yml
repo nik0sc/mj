@@ -1,0 +1,24 @@
+name: Go
+on: [push]
+jobs:
+  test-all:
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '~1.16'
+      - run: go vet ./...
+      - run: go test ./...
+  build-wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: docker://ghcr.io/tinygo/tinygo-dev:0.19.0
+        with:
+          args: tinygo build -o=assets_tinygo/handcheck.wasm -target=wasm -no-debug cmd/handcheck_wasm_tinygo/handcheck.go
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Assets for tinygo js/wasm
+          path: assets_tinygo/
+          if-no-files-found: error
