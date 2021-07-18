@@ -8,7 +8,11 @@ import (
 
 	"github.com/nik0sc/mj"
 	"github.com/nik0sc/mj/handcheck"
+	"github.com/nik0sc/mj/special"
+	"github.com/nik0sc/mj/wait"
 )
+
+var commithash string
 
 //export optCheck
 func optCheck(hand string, cb func(string, string), split bool, memo bool) {
@@ -66,15 +70,44 @@ func main() {
 		}
 
 		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					cb.Invoke(js.Null(), js.Null(), fmt.Sprintf("panic: %v", r))
+				}
+			}()
+
 			h, err := mj.ParseHand(hand)
 			if err != nil {
-				cb.Invoke(js.Null(), fmt.Sprintf("cannot parse hand: %s", err.Error()))
+				cb.Invoke(js.Null(), js.Null(), fmt.Sprintf("cannot parse hand: %s", err.Error()))
 				return
 			}
 
-			cb.Invoke(c.Check(h).String(), js.Null())
+			ok, waited := special.IsThirteenOrphans(h)
+			if ok {
+				var msg string
+				if waited.Valid() {
+					msg = fmt.Sprintf("thirteen orphans (wait: %s)", waited.String())
+				} else {
+					msg = fmt.Sprintf("thirteen orphans (pure)")
+				}
+				cb.Invoke(msg, js.Null(), js.Null())
+				return
+			}
+
+			ok, waited = special.IsSevenPairs(h, true)
+			if ok {
+				cb.Invoke(fmt.Sprintf("seven pairs (wait: %s)", waited.String()), js.Null(), js.Null())
+				return
+			}
+
+			g := c.Check(h)
+			waits := mj.Hand(wait.Find(g, true)).String()
+
+			cb.Invoke(g.String(), waits, js.Null())
 		}()
 		return nil
 	}))
+
+	js.Global().Set("version", commithash[:8])
 	<-c
 }

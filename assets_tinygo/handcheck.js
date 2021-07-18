@@ -9,20 +9,25 @@ const readyInput = function() {
     const strategyEl = document.getElementById("selStrategy");
     const inpHandEl = document.getElementById("inpHand");
     const btnCheckEl = document.getElementById("btnCheck");
+    const versionEl = document.getElementById("version");
     btnCheckEl.onclick = () => {
         const h = inpHandEl.value;
         const split = document.getElementById("chkSplit").checked;
         const memo = document.getElementById("chkMemo").checked;
         const strategy = strategyEl.value;
 
-        checkHand(strategy, h, (result, error) => {
+        checkHand(strategy, h, (result, wait, error) => {
             if (error != null) {
                 resultEl.textContent = "";
                 errorEl.textContent = error;
                 console.error(error);
-            } else {
-                resultEl.textContent = result;
-                errorEl.textContent = "";
+                return;
+            }
+            resultEl.textContent = result;
+            errorEl.textContent = "";
+            
+            if (typeof wait == "string" && wait != "") {
+                resultEl.textContent += ` wait: ${wait}`;
             }
         }, split, memo);
     };
@@ -36,6 +41,7 @@ const readyInput = function() {
         })
     })
 
+    versionEl.textContent = version;
     console.log("input ready");
 }
 

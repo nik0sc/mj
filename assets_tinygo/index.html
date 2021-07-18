@@ -21,10 +21,7 @@
         .nerds {
             font-style: italic;
         }
-        .tryout {
-            color: blue;
-        }
-        .tryout:visited {
+        .tryout, .tryout:visited {
             color: blue;
         }
         #inpHand {
@@ -45,7 +42,8 @@
 <h1>Mahjong hand solver</h1>
 <p>This algorithm finds the optimal grouping for a mahjong hand. An optimal grouping minimises ungrouped tiles, then
     minimises the number of pairs. The optimal grouping for a hand is not necessarily a winning one.</p>
-
+<p>If the hand has 13 tiles, any tiles that could complete it are also shown.</p>
+<p>Some special hands are also detected.</p>
 <p>
     <label for="inpHand">Hand: </label>
     <input type="text" id="inpHand"/>
@@ -68,10 +66,15 @@
 <ul>
     <li><a href="#" class="tryout">b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1 b1</a></li>
     <li><a href="#" class="tryout">b1 b2 b3 b3 b4 b5 b5 b6 b7 b7 b8 b9 b9 b9</a></li>
+    <li><a href="#" class="tryout">b1 b2 b3 b3 b4 b5 b5 b6 b7 b7 b8 b9 b9</a></li>
+    <li><a href="#" class="tryout">b1 b2 b2 b3 b3 b3 b4 b4 b5 b5 b5 b7 b8</a></li>
     <li><a href="#" class="tryout">c1 c2 c3 c3 c3 c4 c5 c6</a></li>
     <li><a href="#" class="tryout">c1 c1 c1 c2 c3 c4 c5 c6</a></li>
     <li><a href="#" class="tryout">b1 b3 b5 b7 b9 c1 c3 c5 c7 c9 w1 w3 w5 w7</a></li>
     <li><a href="#" class="tryout">b1 b2 b3 b1 b2 b3</a></li>
+    <li><a href="#" class="tryout">b1 b9 c1 c9 w1 w9 he hs hw hn hz hf hb</a></li>
+    <li><a href="#" class="tryout">b1 b1 c1 c9 w1 w9 he hs hw hn hz hf hb</a></li>
+    <li><a href="#" class="tryout">b1 b1 b2 b2 b3 b3 b4 b4 b5 b5 b6 b6 b7</a></li>
 </ul>
 <p>Notes:</p>
 <ul>
@@ -108,6 +111,7 @@
         <li>Optimal Counter: Like Optimal, but uses a map of tiles to their counts. Lower branching factor, but higher memory use.</li>
         <li>Greedy: Greedily builds 3-tile melds, then returns a solution if it can make a single pair with no tiles remaining.</li>
     </ul>
+    <p>Version: <span id="version">none</span></p>
 </div>
 </body>
 

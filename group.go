@@ -84,7 +84,26 @@ func (g Group) ToCount() Counter {
 // String returns the human-readable representation of this Group, in the order
 // Pengs, Chis, Pairs and Free.
 func (g Group) String() string {
-	return g.ToHand().String()
+	var ss []string
+
+	for _, t := range g.Pengs {
+		ss = append(ss, strings.Repeat(t.String(), 3))
+	}
+
+	for _, t := range g.Chis {
+		t2 := t
+		t2.Value++
+		t3 := t2
+		t3.Value++
+		ss = append(ss, t.String()+t2.String()+t3.String())
+	}
+
+	for _, t := range g.Pairs {
+		ss = append(ss, strings.Repeat(t.String(), 2))
+	}
+
+	ss = append(ss, g.Free.String())
+	return strings.Join(ss, " ")
 }
 
 // Marshal returns a space-efficient encoding of this Group, suitable for comparison
