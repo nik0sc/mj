@@ -12,5 +12,11 @@ build.handcheck.wasm.tinygo:
 		-ldflags="-X main.commithash=$(COMMITHASH)" \
 		-o=assets_tinygo/handcheck.wasm -target=wasm -no-debug \
 		cmd/handcheck_wasm_tinygo/handcheck.go
-	cp $(TINYGOROOT)/targets/wasm_exec.js assets_tinygo/
+# Try the container path first
+	cp /tinygo/targets/wasm_exec.js assets_tinygo/ || cp $(TINYGOROOT)/targets/wasm_exec.js assets_tinygo/ 
 	ls -lh assets_tinygo
+
+clean:
+	rm assets/handcheck.wasm
+	rm assets_tinygo/handcheck.wasm
+	rm assets_tinygo/wasm_exec.js
