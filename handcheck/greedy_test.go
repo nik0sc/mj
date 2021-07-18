@@ -50,18 +50,18 @@ func Test_GreedyChecker_Check(t *testing.T) {
 				Free:  nil,
 			},
 		},
-		{
-			"not simple",
-			"w1 b7 w4 c5 b9 he w5 hf w5 c3 b8 hf hn hf",
-			args{true, true},
-			mj.Group{},
-		},
-		{
-			"not simple, full result",
-			"w1 b7 w4 c5 b9 he w5 hf w5 c3 b8 hf hn hf",
-			args{false, false},
-			mj.Group{},
-		},
+		// {
+		// 	"not simple",
+		// 	"w1 b7 w4 c5 b9 he w5 hf w5 c3 b8 hf hn hf",
+		// 	args{true, true},
+		// 	mj.Group{},
+		// },
+		// {
+		// 	"not simple, full result",
+		// 	"w1 b7 w4 c5 b9 he w5 hf w5 c3 b8 hf hn hf",
+		// 	args{false, false},
+		// 	mj.Group{},
+		// },
 		{
 			"not simple either",
 			"c1 c2 c3 c3 c3 c4 c5 c6",
@@ -90,12 +90,12 @@ func Test_GreedyChecker_Check(t *testing.T) {
 				Free:  nil,
 			},
 		},
-		{
-			"degen",
-			"b1 b3 b5 b7 b9 c1 c3 c5 c7 c9 w1 w3 w5 w7",
-			args{false, false},
-			mj.Group{},
-		},
+		// {
+		// 	"degen",
+		// 	"b1 b3 b5 b7 b9 c1 c3 c5 c7 c9 w1 w3 w5 w7",
+		// 	args{false, false},
+		// 	mj.Group{},
+		// },
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
