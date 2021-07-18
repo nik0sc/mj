@@ -20,6 +20,21 @@ jobs:
           args: make build.handcheck.wasm.tinygo
       - uses: actions/upload-artifact@v2
         with:
-          name: Assets for wasm
+          name: assets-wasm
           path: assets_tinygo/
           if-no-files-found: error
+  publish-wasm:
+    runs-on: ubuntu-latest
+    needs: [test-all, build-wasm]
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: assets-wasm
+      - uses: JamesIves/github-pages-deploy-action@4.1.4
+        with:
+          branch: master
+          folder: "."
+          repository-name: nik0sc/nik0sc.github.io
+          target-folder: handcheck
+          clean: true
+          token: ${{ secrets.PUBLISH_TOKEN }}
