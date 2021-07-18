@@ -1,4 +1,7 @@
-*.wasm
+# these should be built/copied from compiler libs
+assets*/*.wasm
+assets*/wasm_exec.js
+
 dist.tar.gz
 *.log
 serve.py
