@@ -4,7 +4,9 @@ import (
 	"os"
 	"sort"
 
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/nik0sc/mj"
+	"github.com/nik0sc/mj/internal/cache"
 )
 
 // OptChecker implements an optimal hand checker.
@@ -20,9 +22,7 @@ import (
 type OptChecker struct {
 	// If OptChecker is reused for multiple hands (perhaps in a mahjong-playing AI agent),
 	// we can cache the results.
-	// TODO: Need some kind of cache eviction policy in that case.
-	cache map[string]mj.Group
-
+	cache cache.Cache
 	// optimisations
 
 	// Split hands by suit into sub-hands. Since melds are restricted to one suit only,
@@ -31,8 +31,23 @@ type OptChecker struct {
 	// UseMemo enables memoisation of repeated subproblems when solving a hand.
 	// This should really always be on.
 	UseMemo bool
-	// UseUnsafeMemo...
-	UseUnsafeMemo bool
+}
+
+// NewOptCheckerWithCache creates an OptChecker with cache and all optimisations enabled.
+// size is the maximum number of solutions to be cached.
+func NewOptCheckerWithCache(size int) (OptChecker, error) {
+	c := OptChecker{
+		Split:   true,
+		UseMemo: true,
+	}
+	var err error
+
+	c.cache, err = lru.New(size)
+	if err != nil {
+		return OptChecker{}, err
+	}
+
+	return c, nil
 }
 
 type ostate struct {
@@ -47,13 +62,14 @@ func (c OptChecker) Check(hand mj.Hand) mj.Group {
 	// very important, when we search for melds we depend on sorted order
 	sort.Sort(h)
 
-	// did we solve this hand before?
-	hrepr := h.Marshal()
-	if c.cache == nil {
-		c.cache = make(map[string]mj.Group)
-	}
-	if r, ok := c.cache[hrepr]; ok {
-		return r.Copy(false)
+	var hrepr string
+
+	if c.cache != nil {
+		// did we solve this hand before?
+		hrepr = h.Marshal()
+		if v, ok := c.cache.Get(hrepr); ok {
+			return v.(*mj.Group).Copy(false)
+		}
 	}
 
 	var r mj.Group
@@ -76,7 +92,10 @@ func (c OptChecker) Check(hand mj.Hand) mj.Group {
 		r = c.start(h)
 	}
 
-	c.cache[hrepr] = r.Copy(true)
+	if c.cache != nil {
+		rCopy := r.Copy(true)
+		c.cache.Add(hrepr, &rCopy)
+	}
 	return r
 }
 
